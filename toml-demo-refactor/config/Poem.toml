@@ -1,0 +1,28 @@
+[development]
+address = "localhost"
+port = "8000"
+workers = 4
+
+[development.database]
+adapter = "postgresql"
+db_name = "blog_development"
+pool = 5
+
+[staging]
+address = "0.0.0.0"
+port = "9000"
+
+[staging.database]
+adapter = "postgresql"
+db_name = "blog_development"
+pool = 5
+
+
+[production]
+address = "0.0.0.0"
+port = "9000"
+
+[production.database]
+adapter = "postgresql"
+db_name = "blog_development"
+pool = 5
