@@ -4,6 +4,8 @@
 
 
 pub mod lexical;
+pub mod expr;
+pub mod ctfe;
 
 /// # Examples
 ///
