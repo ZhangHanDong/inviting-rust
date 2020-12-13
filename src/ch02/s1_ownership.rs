@@ -1,9 +1,11 @@
 //! 第二章：Rust核心概念
-//! 1.1 安全管理之内存安全
+//! 2.1 安全管理之内存安全
 //! 
 //! 所有权相关代码
 //! 
 //!  String 结构：
+//!  
+//!  ```text
 //!  ---  
 //!  buffer
 //!  /   capacity
@@ -32,6 +34,7 @@
 //!  preallocated   +–V–+–––+–––+–––+–––+–––+
 //!  read-only      │ P │ a │ s │ c │ a │ l │
 //!  memory         +–––+–––+–––+–––+–––+–––+
+//!  ```
 
 
 /**
@@ -306,8 +309,6 @@ pub fn understand_move(){
     语义层面来理解 Clone ：显式的clone方法调用同一种语义下的两种实现
     1. String 等 引用类型的 Clone
     2. Rc/Arc 类型的 Clone
-
-
 */
 pub fn understand_clone(){ 
     println!(" 理解 Move 语义： 解引用Move ");
@@ -441,7 +442,7 @@ pub fn understand_clone(){
             x; y; z;
         };
     }
-    ``
+    ```
 
     示例三： 所有权 forget/ ManuallyDrop
 

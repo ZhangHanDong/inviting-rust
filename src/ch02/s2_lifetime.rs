@@ -1,5 +1,5 @@
 //! 第二章：Rust核心概念
-//! 1.2 生命周期与借用检查
+//! 2.2 生命周期与借用检查
 //! 
 //! 借用检查相关代码
 
@@ -63,6 +63,8 @@ pub fn understand_nll(){
 /**
 
     理解普通生命周期参数：
+
+    说明： 生命周期参数：late bound vs early bound
 
     示例1: 
 
@@ -138,9 +140,23 @@ pub fn understand_lifetime(){
 
 /**
 
-说明： 生命周期参数：early bound vs late bound
+说明： 生命周期参数：late bound vs early bound 
 
-Quiz 11: https://dtolnay.github.io/rust-quiz/11
+Quiz 11: [https://dtolnay.github.io/rust-quiz/11](https://dtolnay.github.io/rust-quiz/11)
+
+
+```rust
+
+fn f<'a>() {}
+fn g<'a: 'a>() {}
+
+fn main() {
+    let pf = f::<'static> as fn(); // late bound
+    let pg = g::<'static> as fn(); // early bound
+    print!("{}", pf == pg);
+}
+
+```
 
 
 示例一：late bound lifetime
@@ -178,7 +194,7 @@ fn main() {
 }
 ```
 
-示例三：
+示例二： early bound lifetime
 
 ```rust
 fn main() {
@@ -199,7 +215,7 @@ struct Buffer<'a> {
     pos: usize,
 }
 
-impl<'a> Buffer<'a> {
+impl<'b, 'a: 'b> Buffer<'a> {
     fn new(b: &'a [u8]) -> Buffer {
         Buffer {
             buf: b,
@@ -207,7 +223,7 @@ impl<'a> Buffer<'a> {
         }
     }
 
-    fn read_bytes(&mut self) -> &'a [u8] {
+    fn read_bytes(&'b mut self) -> &'a [u8] {
         self.pos += 3;
         &self.buf[self.pos-3..self.pos]
     }
@@ -219,9 +235,48 @@ pub fn understand_lifetime_early_late_bound(){
 }
 
 
+
 /**
 
-    ### T vs &T
+    ### 闭包 与 高阶生命周期
+
+    ```rust
+
+    fn main() {
+        let f = |x: &i32| x; // error
+        // 假如支持下面的语法就方便多了，目前还未支持
+        // let f: for<'a> Fn(&'a i32) -> &'a i32 = |x| x; 
+        let i = &3;
+        let j = f(i);
+    }
+
+    ```
+
+    修正：
+
+    相关：[Explicit lifetime bounds RFC 0192](https://rust-lang.github.io/rfcs/0192-bounds-on-object-and-generic-types.html)
+    ```rust
+
+    // fn annotate<'a, T: 'a ,F>(f: F) -> F where F: Fn(&'a T) -> &'a T { f }
+
+    fn annotate<T,F>(f: F) -> F where for<'a> F: Fn(&'a T) -> &'a T { f }
+
+    fn main() {
+        let f = annotate(|x| x);
+        let i = &3;
+        let j = f(i);
+        assert_eq!(*j, 3);
+    }
+
+    ```
+*/
+pub fn understand_lifetime_for_closure(){
+    println!(" 理解生命周期参数： 闭包相关")
+}
+
+/**
+
+    ### 理解 T vs &T
 
     ```rust
     use std::fmt::Debug;
@@ -251,7 +306,7 @@ pub fn understand_lifetime_early_late_bound(){
     }
     ```
 
-    示例：Rust Quiz 5 ：https://zhuanlan.zhihu.com/p/51616607
+    示例：Rust Quiz 5 ：[https://zhuanlan.zhihu.com/p/51616607](https://zhuanlan.zhihu.com/p/51616607)
 
     以下代码输出什么？
 
@@ -282,8 +337,16 @@ pub fn understand_lifetime_early_late_bound(){
     }
     ```
 
+
     
-    示例： trait对象中的生命周期参数
+*/
+pub fn understand_lifetime_in_generic_type(){ 
+    println!(" 理解生命周期参数：T vs &T ");
+}
+
+/**
+
+    示例： 理解 trait对象中的生命周期参数
 
     ```rust
     trait Foo<'a> {}
@@ -299,13 +362,10 @@ pub fn understand_lifetime_early_late_bound(){
     }
     fn main(){}
     ```
-*/
 
+    ###  理解 HRTB (higher ranked trait bounds)
 
-/**
-    ### HRTB (higher ranked trait bounds)
-
-    示例一：
+    示例一： 
 
     ```rust
     use std::fmt::Debug;
@@ -327,9 +387,10 @@ pub fn understand_lifetime_early_late_bound(){
     }
     ```
 
-    修正：
+    修正：使用 `for<'f>` 改为 late bound
 
     ```rust
+
     use std::fmt::Debug;
     trait DoSomething<T> {
         fn do_sth(&self, value: T);
@@ -402,7 +463,11 @@ pub fn understand_lifetime_early_late_bound(){
 
     fn main() {
         let mut buf = [0u8; 8];
-        let mut checker: Box<dyn for<'a> Checksum<&'a [u8]>> = if rand::random() {
+        // error[E0308]: `if` and `else` have incompatible types
+        // 修正：
+        // step 1: Box<dyn Checksum<&[u8]>> 转为 trait 对象，但它是early bound
+        // step 2: Box<dyn for<'a> Checksum<&'a [u8]>> 使用 for<'a> 转为 late bound
+        let mut checker = if rand::random() {
             println!("Initializing Xor Checksum");
             Box::new(Xor)
         } else {
@@ -424,7 +489,48 @@ pub fn understand_lifetime_early_late_bound(){
         }
     }
     ```
+
+    示例：来自于社区 Potato TooLarge 的案例 
+         
+    [https://zhuanlan.zhihu.com/p/194156624](https://zhuanlan.zhihu.com/p/194156624)
+
+    ```rust
+
+    // https://doc.rust-lang.org/std/collections/struct.HashSet.html
+
+    use std::collections::HashSet;
+
+    fn main() {
+        
+        let hello = "hello".to_owned();
+        let mut items = HashSet::new();
+        
+        items.insert(hello.as_str());
+        
+        let mut global_set = HashSet::new();
+        global_set.insert(hello.as_str());
+        
+        while !global_set.is_empty() {
+            let mut temp_set = HashSet::new();
+            
+            for &item in global_set.iter() {
+                let copy = item.to_owned();
+                let copy_str = copy.as_str();
+                
+                // copy_str <==> &copy  ===>  HashSet::get() 
+                // &copy_str <==> &'x &'a copy 
+
+                if let Some(inner) = items.get(copy_str).cloned() {
+                    temp_set.insert(inner);
+                };
+            };
+            std::mem::swap(&mut global_set, &mut temp_set);
+            break;
+        };
+    }
+    ```
+
 */
 pub fn understand_lifetime_hrtb(){ 
-    println!(" 理解生命周期参数：early bound vs late bound ");
+    println!(" 理解生命周期参数：HRTB (higher ranked trait bounds) ");
 }
