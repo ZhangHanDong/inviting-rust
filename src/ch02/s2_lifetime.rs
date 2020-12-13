@@ -337,6 +337,45 @@ pub fn understand_lifetime_for_closure(){
     }
     ```
 
+    示例：来自于社区 Potato TooLarge 的案例 
+         
+    [https://zhuanlan.zhihu.com/p/194156624](https://zhuanlan.zhihu.com/p/194156624)
+
+    ```rust
+
+    // https://doc.rust-lang.org/std/collections/struct.HashSet.html
+
+    use std::collections::HashSet;
+
+    fn main() {
+        
+        let hello = "hello".to_owned();
+        let mut items = HashSet::new();
+        
+        items.insert(hello.as_str());
+        
+        let mut global_set = HashSet::new();
+        global_set.insert(hello.as_str());
+        
+        while !global_set.is_empty() {
+            let mut temp_set = HashSet::new();
+            
+            for &item in global_set.iter() {
+                let copy = item.to_owned();
+                let copy_str = copy.as_str();
+                
+                // copy_str <==> &copy  ===>  HashSet::get() 
+                // &copy_str <==> &'x &'a copy 
+
+                if let Some(inner) = items.get(copy_str).cloned() {
+                    temp_set.insert(inner);
+                };
+            };
+            std::mem::swap(&mut global_set, &mut temp_set);
+            break;
+        };
+    }
+    ```
 
     
 */
@@ -465,7 +504,7 @@ pub fn understand_lifetime_in_generic_type(){
         let mut buf = [0u8; 8];
         // error[E0308]: `if` and `else` have incompatible types
         // 修正：
-        // step 1: Box<dyn Checksum<&[u8]>> 转为 trait 对象，但它是early bound
+        // step 1: Box<dyn Checksum<&[u8]>> 转为 trait 对象
         // step 2: Box<dyn for<'a> Checksum<&'a [u8]>> 使用 for<'a> 转为 late bound
         let mut checker = if rand::random() {
             println!("Initializing Xor Checksum");
@@ -490,45 +529,7 @@ pub fn understand_lifetime_in_generic_type(){
     }
     ```
 
-    示例：来自于社区 Potato TooLarge 的案例 
-         
-    [https://zhuanlan.zhihu.com/p/194156624](https://zhuanlan.zhihu.com/p/194156624)
-
-    ```rust
-
-    // https://doc.rust-lang.org/std/collections/struct.HashSet.html
-
-    use std::collections::HashSet;
-
-    fn main() {
-        
-        let hello = "hello".to_owned();
-        let mut items = HashSet::new();
-        
-        items.insert(hello.as_str());
-        
-        let mut global_set = HashSet::new();
-        global_set.insert(hello.as_str());
-        
-        while !global_set.is_empty() {
-            let mut temp_set = HashSet::new();
-            
-            for &item in global_set.iter() {
-                let copy = item.to_owned();
-                let copy_str = copy.as_str();
-                
-                // copy_str <==> &copy  ===>  HashSet::get() 
-                // &copy_str <==> &'x &'a copy 
-
-                if let Some(inner) = items.get(copy_str).cloned() {
-                    temp_set.insert(inner);
-                };
-            };
-            std::mem::swap(&mut global_set, &mut temp_set);
-            break;
-        };
-    }
-    ```
+    
 
 */
 pub fn understand_lifetime_hrtb(){ 
