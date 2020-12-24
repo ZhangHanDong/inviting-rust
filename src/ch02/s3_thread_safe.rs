@@ -7,7 +7,10 @@
     - 并发：同时「应对」很多事的能力
     - 并行：同时「执行」很多事的能力
 
-    [https://doc.rust-lang.org/std/time/struct.Duration.html](https://doc.rust-lang.org/std/time/struct.Duration.html)
+    相关类型：
+
+    - [Duration](https://doc.rust-lang.org/std/time/struct.Duration.html)
+    - [JoinHandle](https://doc.rust-lang.org/std/thread/struct.JoinHandle.html)
 
     ```
     use std::thread;
@@ -84,6 +87,86 @@ pub fn understand_local_thread(){
     fn main() {
         let mut v = vec![1,2,3];
         inner_func(&mut v);
+    }
+    ```
+
+    `'static' 与 线程安全
+
+    Note: [曾经的 thread::scoped 会泄漏 JoinGuard 所以被废弃](https://github.com/rust-lang/rust/issues/24292)
+
+    ```
+    use std::fmt;
+    use std::time::Duration;
+    use std::thread;
+
+    struct Foo {
+        string: String,
+        v: Vec<f64>,
+    }
+
+    impl fmt::Display for Foo {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "{}: {:?}", self.string, self.v)
+        }
+    }
+
+    fn test<T: Send + Sync + fmt::Display + 'static >(val: T) {
+        thread::spawn(move || println!("{}", val));
+    }
+
+    fn main() {
+        test("hello");                // &'static str
+        test(String::from("hello"));  // String
+        test(5);                      // i32
+        
+        // Arbitrary struct containing String and Vec<f64>
+        test(Foo {string: String::from("hi"), v: vec![1.2, 2.3]});
+        thread::sleep(Duration::new(1, 0));
+    }
+    ```
+
+    使用 crossbeam::scope 共享数据
+
+    ```rust
+    use crossbeam; 
+    use std::{thread, time::Duration};
+
+    fn main() {
+        let mut vec = vec![1, 2, 3, 4, 5];
+
+        crossbeam::scope(|scope| {
+            for e in &vec {
+                scope.spawn(move |_| {
+                    println!("{:?}", e);
+                });
+            }
+        })
+        .expect("A child thread panicked");
+
+        println!("{:?}", vec);
+    }
+    ```
+
+    scope thread 修改数据
+
+    ```rust
+    use crossbeam; // 0.6.0
+    use std::{thread, time::Duration};
+
+    fn main() {
+        let mut vec = vec![1, 2, 3, 4, 5];
+
+        crossbeam::scope(|scope| {
+            for e in &mut vec {
+                scope.spawn(move |_| {
+                    thread::sleep(Duration::from_secs(1));
+                    *e += 1;
+                });
+            }
+        })
+        .expect("A child thread panicked");
+
+        println!("{:?}", vec);
     }
     ```
 */
@@ -524,7 +607,7 @@ pub fn understand_safed_shared_thread(){
     }
     ```
 
-    示例4: 使用缓存
+    示例4: 使用缓存共享数据
 
     ```rust
     #[macro_use]
@@ -691,6 +774,272 @@ pub fn understand_safed_shared_thread(){
                 }
                 Ok(ResultMsg::Exited) => {
                     // 断言检测：是在接收到两个请求以后退出的
+                    assert_eq!(3, counter);
+                    break;
+                }
+                _ => panic!("Error receiving a ResultMsg."),
+            }
+        }
+    }
+    ```
+
+    示例5: 确保从缓存中取共享数据的行为是确定的
+
+    ```
+    #[macro_use]
+    extern crate crossbeam_channel;
+    extern crate rayon;
+
+    use crossbeam_channel::unbounded;
+    use std::collections::HashMap;
+    use std::sync::{Arc, Condvar, Mutex};
+
+    // use parking_lot::{Condvar, Mutex};
+    // use std::sync::Arc;
+    use std::thread;
+
+    enum WorkMsg {
+        Work(u8),
+        Exit,
+    }
+
+    #[derive(Debug, Eq, PartialEq)]
+    enum CacheState {
+        Ready,
+        WorkInProgress,
+    }
+
+    enum ResultMsg {
+        Result(u8, WorkPerformed),
+        Exited,
+    }
+
+    struct WorkerState {
+        ongoing: i16,
+        exiting: bool,
+    }
+
+    impl WorkerState {
+        fn init() -> Self {
+            WorkerState{ ongoing: 0, exiting: false }
+        }
+            
+        fn set_ongoing(&mut self, count: i16) {
+            self.ongoing += count;
+        }
+            
+        fn set_exiting(&mut self, exit_state: bool) {
+            self.exiting = exit_state;
+        }
+            
+        fn is_exiting(&self) -> bool {
+            self.exiting == true
+        }
+            
+        fn is_nomore_work(&self)-> bool {
+            self.ongoing == 0
+        }
+    }
+
+    #[derive(Debug, Eq, PartialEq)]
+    enum WorkPerformed {
+        FromCache,
+        New,
+    }
+
+    #[derive(Eq, Hash, PartialEq)]
+    struct CacheKey(u8);
+
+    fn main() {
+        let (work_sender, work_receiver) = unbounded();
+        let (result_sender, result_receiver) = unbounded();
+        // 添加一个新的Channel，Worker使用它来通知“并行”组件已经完成了一个工作单元
+        let (pool_result_sender, pool_result_receiver) = unbounded();
+        let mut worker_state = WorkerState::init();
+            
+        // 使用线程池
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(2)
+            .build()
+            .unwrap();
+                
+        // 缓存 work ，由 池 中的 worker 共享
+        let cache: Arc<Mutex<HashMap<CacheKey, u8>>> = Arc::new(Mutex::new(HashMap::new()));
+
+        // 增加缓存状态，指示对于给定的key，缓存是否已经准备好被读取。
+        let cache_state: Arc<Mutex<HashMap<CacheKey, Arc<(Mutex<CacheState>, Condvar)>>>> =
+            Arc::new(Mutex::new(HashMap::new()));
+            
+        let _ = thread::spawn(move || loop {
+            // 使用 corssbeam 提供的 select! 宏 选择一个就绪工作
+            select! {
+                recv(work_receiver) -> msg => {
+                    match msg {
+                        Ok(WorkMsg::Work(num)) => {
+                            let result_sender = result_sender.clone();
+                            let pool_result_sender = pool_result_sender.clone();
+                            // 使用缓存
+                            let cache = cache.clone();
+                            let cache_state = cache_state.clone();
+
+                            // 注意，这里正在池上启动一个新的工作单元。
+                            worker_state.set_ongoing(1);
+
+                            pool.spawn(move || {
+                                let num = {
+                                    let (cache_state_lock, cvar) = {
+                                        //  `cache_state` 临界区开始
+                                        let mut state_map = cache_state.lock().unwrap();
+                                        &*state_map
+                                            .entry(CacheKey(num.clone()))
+                                            .or_insert_with(|| {
+                                                Arc::new((
+                                                    Mutex::new(CacheState::Ready),
+                                                    Condvar::new(),
+                                                ))
+                                            })
+                                            .clone()
+                                        //  `cache_state` 临界区结束
+                                    };
+
+                                    //  `state` 临界区开始
+                                    let mut state = cache_state_lock.lock().unwrap();
+
+                                    // 注意：使用while循环来防止条件变量的虚假唤醒
+                                    while let CacheState::WorkInProgress = *state {
+                                        // 阻塞直到状态是 `CacheState::Ready`.
+                                        //
+                                        // 当唤醒时会自动释放锁
+                                        let current_state = cvar
+                                            .wait(state)
+                                            .unwrap();
+                                        state = current_state;
+                                    }
+
+                                    // 循环外可以认为state 已经是 Ready 的了
+                                    assert_eq!(*state, CacheState::Ready);
+
+                                    let (num, result) = {
+                                        // 缓存临界区开始
+                                        let cache = cache.lock().unwrap();
+                                        let key = CacheKey(num);
+                                        let result = match cache.get(&key) {
+                                            Some(result) => Some(result.clone()),
+                                            None => None,
+                                        };
+                                        (key.0, result)
+                                        // 缓存临界区结束
+                                    };
+
+                                    if let Some(result) = result {
+                                        // 从缓存中获得一个结果，并将其发送回去，
+                                        // 同时带有一个标志，表明是从缓存中获得了它
+                                        let _ = result_sender.send(ResultMsg::Result(result, WorkPerformed::FromCache));
+                                        let _ = pool_result_sender.send(());
+
+                                        // 不要忘记通知等待线程
+                                        cvar.notify_one();
+                                        return;
+                                    } else {
+                                        // 如果缓存里没有找到结果，那么切换状态
+                                        *state = CacheState::WorkInProgress;
+                                        num
+                                    }
+                                    // `state` 临界区结束
+                                };
+
+                                // 在临界区外做更多「昂贵工作」
+
+                                let _ = result_sender.send(ResultMsg::Result(num.clone(), WorkPerformed::New));
+
+                                {
+                                    // 缓存临界区开始
+                                    // 插入工作结果到缓存中
+                                    let mut cache = cache.lock().unwrap();
+                                    let key = CacheKey(num.clone());
+                                    cache.insert(key, num);
+                                    // 缓存临界区结束
+                                }
+
+                                let (lock, cvar) = {
+                                    let mut state_map = cache_state.lock().unwrap();
+                                    &*state_map
+                                        .get_mut(&CacheKey(num))
+                                        .expect("Entry in cache state to have been previously inserted")
+                                        .clone()
+                                };
+                                // 重新进入 `state` 临界区
+                                let mut state = lock.lock().unwrap();
+
+                                // 在这里，由于已经提前设置了state，并且任何其他worker都将等待状态切换回ready，可以确定该状态是“in-progress”。
+                                assert_eq!(*state, CacheState::WorkInProgress);
+
+                                // 切换状态为 Ready
+                                *state = CacheState::Ready;
+
+                                // 通知等待线程
+                                cvar.notify_one();
+
+                                let _ = pool_result_sender.send(());
+                            });
+                        },
+                        Ok(WorkMsg::Exit) => {
+                            // N注意，这里接收请求并退出
+                            // exiting = true;
+                            worker_state.set_exiting(true);
+
+                            // 如果没有正则进行的工作则立即退出
+                            if worker_state.is_nomore_work() {
+                                result_sender.send(ResultMsg::Exited);
+                                break;
+                            }
+                        },
+                        _ => panic!("Error receiving a WorkMsg."),
+                    }
+                },
+                recv(pool_result_receiver) -> _ => {
+                    if worker_state.is_nomore_work() {
+                        panic!("Received an unexpected pool result.");
+                    }
+
+                    // 注意，一个工作单元已经被完成
+                    worker_state.set_ongoing(-1);
+
+                    // 如果没有正在进行的工作，并且接收到了退出请求，那么就退出
+                    if worker_state.is_nomore_work() && worker_state.is_exiting() {
+                        result_sender.send(ResultMsg::Exited);
+                        break;
+                    }
+                },
+            }
+        });
+
+        let _ = work_sender.send(WorkMsg::Work(0));
+        // 发送两个相同的work
+        let _ = work_sender.send(WorkMsg::Work(1));
+        let _ = work_sender.send(WorkMsg::Work(1));
+        let _ = work_sender.send(WorkMsg::Exit);
+
+        let mut counter = 0;
+        
+        // 当work 是 1 的时候重新计数
+        let mut work_one_counter = 0;
+
+        loop {
+            match result_receiver.recv() {
+                Ok(ResultMsg::Result(num, cached)) => {
+                    counter += 1;
+
+                    if num == 1 {
+                        work_one_counter += 1;
+                    }
+
+                    // 现在我们可以断言，当收到 num 为 1 的第二个结果时，它已经来自缓存。
+                    if num == 1 && work_one_counter == 2 {
+                        assert_eq!(cached, WorkPerformed::FromCache);
+                    }
+                }
+                Ok(ResultMsg::Exited) => {
                     assert_eq!(3, counter);
                     break;
                 }
