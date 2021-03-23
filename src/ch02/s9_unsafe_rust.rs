@@ -141,21 +141,27 @@ pub fn unsafe_intro(){}
     ```
 
 
-    示例：
+    ### Drop check 
+    
+    示例1：正常的drop check
 
     ```rust
     #![allow(unused)]
+    #![allow(unused)]
     #![feature(alloc_layout_extra)]
     #![feature(dropck_eyepatch)]
-    use std::alloc::{GlobalAlloc, System, Layout};
-    use std::ptr;
-    use std::mem;
+    use std::alloc::{GlobalAlloc, Layout, System};
     use std::fmt;
     use std::marker::PhantomData;
+    use std::mem;
+    use std::ptr;
 
     #[derive(Copy, Clone, Debug)]
 
-    enum State { InValid, Valid }
+    enum State {
+        InValid,
+        Valid,
+    }
 
     #[derive(Debug)]
     struct Hello<T: fmt::Debug>(&'static str, T, State);
@@ -166,10 +172,7 @@ pub fn unsafe_intro(){}
     }
     impl<T: fmt::Debug> Drop for Hello<T> {
         fn drop(&mut self) {
-            println!("drop Hello({}, {:?}, {:?})",
-                    self.0,
-                    self.1,
-                    self.2);
+            println!("drop Hello({}, {:?}, {:?})", self.0, self.1, self.2);
             self.2 = State::InValid;
         }
     }
@@ -182,9 +185,199 @@ pub fn unsafe_intro(){}
         }
     }
     fn f1() {
-    let x; let y;
-    x = Hello::new("x", 13);
-    y = WrapBox::new(Hello::new("y", &x));
+        let x;
+        let y;
+        x = Hello::new("x", 13);
+        y = WrapBox::new(Hello::new("y", &x));
+    }
+
+    struct MyBox<T> {
+        v: *const T,
+    }
+    impl<T> MyBox<T> {
+        fn new(t: T) -> Self {
+            unsafe {
+                let p = System.alloc(Layout::array::<T>(1).unwrap());
+                let p = p as *mut T;
+                ptr::write(p, t);
+                MyBox {
+                    v: p, 
+                }
+            }
+        }
+    }
+
+
+    impl< T> Drop for MyBox<T> {
+        fn drop(&mut self) {
+            unsafe {
+                let p = self.v as *mut _;
+                System.dealloc(p, Layout::array::<T>(mem::align_of::<T>()).unwrap());
+            }
+        }
+    }
+
+
+    fn f2() {
+        {
+            let (x1, y1);
+            x1 = Hello::new("x1", 13);
+            y1 = MyBox::new(Hello::new("y1", &x1));
+        }
+        {
+            let (y2,x2 ); // 此处交换，会报错，注意编译错误
+            x2 = Hello::new("x2", 13);
+            y2 = MyBox::new(Hello::new("y2", &x2));
+        }
+    }
+
+    fn main() {
+        f1();
+        f2();
+    }
+
+    ```
+
+    使用 改进：
+
+    ```rust
+    #![allow(unused)]
+    #![allow(unused)]
+    #![feature(alloc_layout_extra)]
+    #![feature(dropck_eyepatch)]
+    use std::alloc::{GlobalAlloc, Layout, System};
+    use std::fmt;
+    use std::marker::PhantomData;
+    use std::mem;
+    use std::ptr;
+
+    #[derive(Copy, Clone, Debug)]
+
+    enum State {
+        InValid,
+        Valid,
+    }
+
+    #[derive(Debug)]
+    struct Hello<T: fmt::Debug>(&'static str, T, State);
+    impl<T: fmt::Debug> Hello<T> {
+        fn new(name: &'static str, t: T) -> Self {
+            Hello(name, t, State::Valid)
+        }
+    }
+    impl<T: fmt::Debug> Drop for Hello<T> {
+        fn drop(&mut self) {
+            println!("drop Hello({}, {:?}, {:?})", self.0, self.1, self.2);
+            self.2 = State::InValid;
+        }
+    }
+    struct WrapBox<T> {
+        v: Box<T>,
+    }
+    impl<T> WrapBox<T> {
+        fn new(t: T) -> Self {
+            WrapBox { v: Box::new(t) }
+        }
+    }
+    fn f1() {
+        let x;
+        let y;
+        x = Hello::new("x", 13);
+        y = WrapBox::new(Hello::new("y", &x));
+    }
+
+    struct MyBox<T> {
+        v: *const T,
+    }
+    impl<T> MyBox<T> {
+        fn new(t: T) -> Self {
+            unsafe {
+                let p = System.alloc(Layout::array::<T>(1).unwrap());
+                let p = p as *mut T;
+                ptr::write(p, t);
+                MyBox {
+                    v: p, 
+                }
+            }
+        }
+    }
+
+
+    unsafe impl<#[may_dangle] T> Drop for MyBox<T> {
+        fn drop(&mut self) {
+            unsafe {
+                let p = self.v as *mut _;
+                System.dealloc(p, Layout::array::<T>(mem::align_of::<T>()).unwrap());
+            }
+        }
+    }
+
+    fn f2() {
+        {
+            let (x1, y1);
+            x1 = Hello::new("x1", 13);
+            y1 = MyBox::new(Hello::new("y1", &x1));
+        }
+        {
+            let (y2,x2 ); // 此处改变
+            x2 = Hello::new("x2", 13);
+            y2 = MyBox::new(Hello::new("y2", &x2));
+        }
+    }
+
+    fn main() {
+        f1();
+        f2();
+    }
+
+    ```
+
+    使用 PhantomData 防止出现 UB:
+
+    ```rust
+    #![allow(unused)]
+    #![allow(unused)]
+    #![feature(alloc_layout_extra)]
+    #![feature(dropck_eyepatch)]
+    use std::alloc::{GlobalAlloc, Layout, System};
+    use std::fmt;
+    use std::marker::PhantomData;
+    use std::mem;
+    use std::ptr;
+
+    #[derive(Copy, Clone, Debug)]
+
+    enum State {
+        InValid,
+        Valid,
+    }
+
+    #[derive(Debug)]
+    struct Hello<T: fmt::Debug>(&'static str, T, State);
+    impl<T: fmt::Debug> Hello<T> {
+        fn new(name: &'static str, t: T) -> Self {
+            Hello(name, t, State::Valid)
+        }
+    }
+    impl<T: fmt::Debug> Drop for Hello<T> {
+        fn drop(&mut self) {
+            println!("drop Hello({}, {:?}, {:?})", self.0, self.1, self.2);
+            self.2 = State::InValid;
+        }
+    }
+    struct WrapBox<T> {
+        v: Box<T>,
+    }
+    impl<T> WrapBox<T> {
+        fn new(t: T) -> Self {
+            WrapBox { v: Box::new(t) }
+        }
+    }
+    fn f1() {
+        let x;
+        let y;
+        x = Hello::new("x", 13);
+        y = WrapBox::new(Hello::new("y", &x));
     }
 
     struct MyBox<T> {
@@ -192,46 +385,50 @@ pub fn unsafe_intro(){}
         // _pd: PhantomData<T>,
     }
     impl<T> MyBox<T> {
-    fn new(t: T) -> Self {
-        unsafe {
-            let p = System.alloc(Layout::array::<T>(1).unwrap());
-            let p = p as *mut T;
-            ptr::write(p, t);
-            MyBox { v: p ,/* _pd: Default::default()*/ }
-        }
-    }
-    }
-
-    // 使用#[may_dangle]来修复问题
-    unsafe impl<#[may_dangle] T> Drop for MyBox<T> {
-        fn drop(&mut self) {
+        fn new(t: T) -> Self {
             unsafe {
-                ptr::read(self.v); // 此处新增
-                let p = self.v as *mut _;
-                System.dealloc(p,
-                    Layout::array::<T>(mem::align_of::<T>()).unwrap());
+                let p = System.alloc(Layout::array::<T>(1).unwrap());
+                let p = p as *mut T;
+                ptr::write(p, t);
+                MyBox {
+                    v: p, 
+                    // _pd: Default::default()
+                }
             }
         }
     }
-    fn f2() {
-    {
-        let (x1, y1);
-        x1 = Hello::new("x1", 13);
-        y1 = MyBox::new(Hello::new("y1", &x1));
-    }
-    {
-        let (y2, x2); // 此处改变
-        x2 = Hello::new("x2", 13);
-        y2 = MyBox::new(Hello::new("y2", &x2));
-    }
+
+
+    unsafe impl<#[may_dangle] T> Drop for MyBox<T> {
+        fn drop(&mut self) {
+            unsafe {
+                ptr::read(self.v); // 此处新增，出现UB (use after free,UAF)
+                let p = self.v as *mut _;
+                System.dealloc(p, Layout::array::<T>(mem::align_of::<T>()).unwrap());
+            }
+        }
     }
 
+    fn f2() {
+        {
+            let (x1, y1);
+            x1 = Hello::new("x1", 13);
+            y1 = MyBox::new(Hello::new("y1", &x1));
+        }
+        {
+            let (y2,x2 ); // 此处改变
+            x2 = Hello::new("x2", 13);
+            y2 = MyBox::new(Hello::new("y2", &x2));
+        }
+    }
 
     fn main() {
         f1();
         f2();
     }
+
     ```
+
 
 
     示例：型变
@@ -242,7 +439,7 @@ pub fn unsafe_intro(){}
     - 逆变（contravariant），如果它逆转了子类型序关系。
     - 不变（invariant），如果上述两种均不适用。
 
-    Rust 里唯一的类型父子关系是生命周期：`'static: 'a` ，并且默认都是协变，唯一逆变的地方在 `fn(T)`
+    Rust 里唯一的类型父子关系是生命周期：`'a: 'b` 。比如，`'static: 'a` ，并且默认都是协变，唯一逆变的地方在 `fn(T)`
 
     `'static: 'a` 对应： `子类型: 父类型`。
 
@@ -297,11 +494,15 @@ pub fn unsafe_intro(){}
     let cell = MyCell::new(&X);
     step1(&cell);
     println!("  end value: {}", cell.value); //此处 cell.value的值将无法预期，UB风险
-    }Run
+    }
+
+    ```
+
     Basic usage: 修改MyCell 类型为不变
 
     解决上面示例UB的问题，编译将报错，因为安全检查生效了，成功阻止了UB风险
 
+    ```rust
     use std::marker::PhantomData;
     struct MyCell<T> {
         value: T,
@@ -362,6 +563,11 @@ pub fn unsafe_intro(){}
         B.foo2(&s)
     }
 
+    ```
+
+    示例2:
+
+    ```rust
     fn foo(input: &str)  {
         println!("{:?}", input);               
     }
@@ -376,3 +582,17 @@ pub fn unsafe_intro(){}
 
 */
 pub fn security_abstract(){}
+
+
+/**
+
+    # 其他介绍
+
+    - [NonNull](https://doc.rust-lang.org/nightly/std/ptr/struct.NonNull.html)
+    - [Play](https://play.rust-lang.org/?version=nightly&mode=debug&edition=2015&gist=d95a1c5ec1a8c4279f366bb044ad6202)
+    - [LinkedList](https://doc.rust-lang.org/nightly/src/alloc/collections/linked_list.rs.html#39-44)
+    - [MaybeUninit](https://doc.rust-lang.org/std/mem/union.MaybeUninit.html)
+    - 推荐阅读：[Unsafe Rust: How and when (not) to use it](https://blog.logrocket.com/unsafe-rust-how-and-when-not-to-use-it/)
+    - [rustsec advisories](https://rustsec.org/advisories/)
+*/
+pub fn nonnull(){}
