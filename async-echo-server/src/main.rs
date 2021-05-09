@@ -64,6 +64,10 @@ fn init_log() {
         .init();
 }
 
+// async fn f() -> T
+// equivalent to ：
+// fn f() -> impl Future<Output = T>
+
 async fn handle_client(stream: TcpStream) -> io::Result<()> {
     let mut buf = [0u8; 1024];
     info!("(handle client) {}", stream.0);

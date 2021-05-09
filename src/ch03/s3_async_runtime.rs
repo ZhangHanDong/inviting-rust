@@ -2,13 +2,16 @@
 //!
 //! # 3.3 异步 运行时
 //! 
+//! 
 //! - [tokio](https://github.com/tokio-rs/tokio)
 //! - [async-std](https://github.com/async-rs/async-std)
 //! - [smol](https://github.com/smol-rs/smol)
 //! - [bastion](https://github.com/bastion-rs/bastion)
 //! - [glommio](https://github.com/DataDog/glommio)
+//! - [embassy](https://github.com/embassy-rs/embassy)
 //! 
 //! 框架剖析：
+//! 
 //! 
 //! - [rocket](https://github.com/SergioBenitez/Rocket)
 //! - [acitx-web](https://github.com/actix/actix-web)
@@ -66,3 +69,5 @@ pub fn b_async_std_runtime(){}
     [io_uring 支持](https://github.com/tokio-rs/tokio-uring/pull/1)
 */
 pub fn c_tokio_runtime(){}
+
+
