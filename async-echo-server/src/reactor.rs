@@ -1,8 +1,8 @@
 use super::*;
 
 pub struct Reactor {
-    epoll: Epoll,
-    wakers: Mutex<HashMap<RawFd, Waker>>,
+    pub epoll: Epoll,
+    pub wakers: Mutex<HashMap<RawFd, Waker>>,
 }
 
 
