@@ -2,17 +2,14 @@ use super::*;
 
 pub struct Ipv4Addr(libc::in_addr);
 pub struct TcpListener(RawFd);
-pub struct TcpStream(RawFd);
+pub struct TcpStream(pub RawFd);
 pub struct Incoming<'a>(&'a TcpListener);
 
 impl Ipv4Addr {
     pub fn new(a: u8, b: u8, c: u8, d: u8) -> Self {
+        let in_addr_t = u32::from_be_bytes([a, b, c, d]);
         Ipv4Addr(libc::in_addr {
-            s_addr: ((u32::from(a) << 24)
-                | (u32::from(b) << 16)
-                | (u32::from(c) << 8)
-                | u32::from(d))
-            .to_be(),
+            s_addr: unsafe { crate::util::htonl(in_addr_t) },
         })
     }
 }
@@ -29,8 +26,14 @@ impl TcpListener {
         let sock = syscall!(socket(
             libc::PF_INET,
             libc::SOCK_STREAM | libc::SOCK_CLOEXEC,
-            0
+            libc::IPPROTO_IP
         ))?;
+        // set server_socket_fd to non-blocking IO
+        unsafe {
+            let flags = libc::fcntl(sock, libc::F_GETFL, 0);
+            libc::fcntl(sock, libc::F_SETFL, libc::O_NONBLOCK | flags);
+        }
+
         let opt: i32 = 1;
         syscall!(setsockopt(
             sock,
@@ -54,7 +57,6 @@ impl TcpListener {
 
         info!("(TcpListner) listen: {}", sock);
         let listner = TcpListener(sock);
-        listner.setnonblocking()?;
         Ok(listner)
     }
 
@@ -70,12 +72,6 @@ impl TcpListener {
 
     pub fn incoming(&self) -> Incoming<'_> {
         Incoming(self)
-    }
-
-    pub fn setnonblocking(&self) -> io::Result<()> {
-        let flag = syscall!(fcntl(self.0, libc::F_GETFL, 0))?;
-        syscall!(fcntl(self.0, libc::F_SETFL, flag | libc::O_NONBLOCK))?;
-        Ok(())
     }
 }
 
