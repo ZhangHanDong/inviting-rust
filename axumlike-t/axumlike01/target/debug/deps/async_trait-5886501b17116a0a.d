@@ -1,0 +1,10 @@
+/Users/zhangalex/Work/Consultation/GeekTime/inviting-rust/axumlike-t/axumlike01/target/debug/deps/libasync_trait-5886501b17116a0a.dylib: /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/lib.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/args.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/expand.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/lifetime.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/parse.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/receiver.rs
+
+/Users/zhangalex/Work/Consultation/GeekTime/inviting-rust/axumlike-t/axumlike01/target/debug/deps/async_trait-5886501b17116a0a.d: /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/lib.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/args.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/expand.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/lifetime.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/parse.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/receiver.rs
+
+/Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/lib.rs:
+/Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/args.rs:
+/Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/expand.rs:
+/Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/lifetime.rs:
+/Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/parse.rs:
+/Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/async-trait-0.1.51/src/receiver.rs:
