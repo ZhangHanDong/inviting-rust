@@ -1,8 +1,8 @@
 //! 第二章：Rust核心概念
 //! 2.1 安全管理之内存安全
-//! 
+//!
 //! 所有权相关代码
-//! 
+//!
 //!  String 结构：
 //!  
 //!  ```text
@@ -25,7 +25,7 @@
 //!  &'static str 结构：
 //!              [–––––––––––]
 //!              +–––+–––+
-//!  stack frame │ • │ 6 │ 
+//!  stack frame │ • │ 6 │
 //!              +–│–+–––+
 //!                │                 
 //!                +––+                
@@ -34,7 +34,6 @@
 //!  read-only      │ P │ a │ s │ c │ a │ l │
 //!  memory         +–––+–––+–––+–––+–––+–––+
 //!  ```
-
 
 /**
     ### Rust 语义：Move 语义 与 Copy 语义
@@ -52,7 +51,7 @@
         let a = "42";
         let b = a;
         println!("{:?}", a); // work
-        
+
         // impl !Copy for String
         let a = "42".to_string();
         // &String deref to &str
@@ -67,12 +66,12 @@
         let b : &mut str = &mut a;
         let c = b;
         // println!("{:?}", b); // don't work, b have been moved
-        
+
         // auto impl Copy for Tuple, if all item implemented Copy trait in Tuple
         let t = (42, "42");
         let t2 = t;
         println!("{:?}", t); // work
-        
+
         // auto impl !Copy for Tuple
         let t = (42, "42".to_string());
         let t2 = t;
@@ -80,10 +79,9 @@
     }
     ```
 */
-pub fn primitive_types(){ 
+pub fn primitive_types() {
     println!(" Copy 和 Move 语义： 基础数据类型实现 Copy 的一些情况 ");
 }
-
 
 /**
     ### Rust 语义：Move 语义 与 Copy 语义
@@ -126,10 +124,9 @@ pub fn primitive_types(){
     }
     ```
 */
-pub fn custom_types(){ 
+pub fn custom_types() {
     println!(" Copy 和 Move 语义： 自定义类型实现 Copy 的一些情况 ");
 }
-
 
 /**
     ### Rust 语义：Move 语义 与 Copy 语义
@@ -155,13 +152,12 @@ pub fn custom_types(){
         let a = A;
         let b = a;
     }
-    
+
     ```
 */
-pub fn understand_copy_clone(){ 
+pub fn understand_copy_clone() {
     println!(" 理解按位复制 ： Copy ");
 }
-
 
 /**
     ### Rust 语义：Move 语义 与 Copy 语义
@@ -174,13 +170,13 @@ pub fn understand_copy_clone(){
     fn main() {
         let a = A(1, 2);
         let b = a; // 按位复制，复制后，b和a完全相同，包括内存对齐填充的padding部分。
-        let c = A(a.0, a.1); // 逐成员复制，非按位复制，c和a的padding部分不一定相同。        
+        let c = A(a.0, a.1); // 逐成员复制，非按位复制，c和a的padding部分不一定相同。
     }
-    
+
     ```
 
     示例二：
-    
+
     ```rust
     #[derive(Debug, Copy, Clone)]
     struct A {
@@ -193,7 +189,7 @@ pub fn understand_copy_clone(){
         let a = unsound_a();
         // 尝试将 Some(a) 改为 a
         let some_a = Some(a);
-        
+
         println!("a: {:#?}", a);
         println!("some_a: {:#?}", some_a);
     }
@@ -256,11 +252,9 @@ pub fn understand_copy_clone(){
     }
     ```
 */
-pub fn understand_copy(){ 
+pub fn understand_copy() {
     println!(" 理解按位复制 ： Copy ");
 }
-
-
 
 /**
 
@@ -299,20 +293,18 @@ pub fn understand_copy(){
     ```
 
 */
-pub fn understand_move(){ 
+pub fn understand_move() {
     println!(" 理解 Move 语义： 解引用Move ");
 }
-
 
 /**
     语义层面来理解 Clone ：显式的clone方法调用同一种语义下的两种实现
     1. String 等 引用类型的 Clone
     2. Rc/Arc 类型的 Clone
 */
-pub fn understand_clone(){ 
+pub fn understand_clone() {
     println!(" 理解 Move 语义： 解引用Move ");
 }
-
 
 /**
 
@@ -323,7 +315,7 @@ pub fn understand_clone(){
         // impl Copy for i32
         let mut a = "42".to_string();
         let b = a; // drop(a);
-        
+
         a = "32".to_string();
         println!("{:?}", a);
     }
@@ -344,7 +336,7 @@ pub fn understand_clone(){
         let y = PrintDrop("y");
     }
     ```
-    
+
     元组：
 
     ```rust
@@ -375,7 +367,7 @@ pub fn understand_clone(){
     }
 
     ```
- 
+
     结构体：
 
     ```rust
@@ -473,6 +465,6 @@ pub fn understand_clone(){
     ```
 
 */
-pub fn understand_drop(){ 
+pub fn understand_drop() {
     println!(" 理解 Drop ");
 }

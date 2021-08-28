@@ -1,14 +1,14 @@
 //! 第三章：Rust 异步编程概念
 //!
 //! # 3.2 异步 编程 模型
-//! 
+//!
 //! - [smol](https://github.com/smol-rs/smol)
-//! - Future 
+//! - Future
 //! - 生成器 与 协程
 //! - Pin 与 UnPin
 //! - Async/Await
-//! 
-//! 
+//!
+//!
 
 /**
 
@@ -104,23 +104,22 @@
     5. 线程间有竞争，异步任务之间也有竞争。
 
     整个异步编程概念，包括异步语法、异步运行时都是围绕如何建立这种「绿色线程」抽象而成的。
-    
+
 */
-pub fn a_async_intro(){}
+pub fn a_async_intro() {}
 
 /**
 
     # Future 和 Futures-rs 概要
-    
+
     - [Future](https://doc.rust-lang.org/std/future/index.html) and [task](https://doc.rust-lang.org/std/task/index.html)
     - [futures-rs](https://github.com/rust-lang/futures-rs)
 
-    
+
 
 */
 
-pub fn b_futures_simple_intro(){}
-
+pub fn b_futures_simple_intro() {}
 
 /**
 
@@ -129,12 +128,10 @@ pub fn b_futures_simple_intro(){}
     代码示例参见本仓库内：async-echo-server
 
     通过代码实现 简单的异步运行时（executor+reactor）
-    
+
 */
 
-pub fn c_async_await_echo(){}
-
-
+pub fn c_async_await_echo() {}
 
 /**
 
@@ -180,7 +177,7 @@ pub fn c_async_await_echo(){}
     1. 理解 leaf-futures vs Non-leaf-futures (async/await)
     2. 理解 Waker：
 
-    > 当事件源注册该Future将在某个事件上等待时，它必须存储唤醒程序，以便以后可以调用唤醒来开始唤醒阶段。 
+    > 当事件源注册该Future将在某个事件上等待时，它必须存储唤醒程序，以便以后可以调用唤醒来开始唤醒阶段。
     > 为了引入并发性，能够同时等待多个事件非常重要，因此唤醒器不可能由单个事件源唯一拥有。 结果，Waker类型需要是实现 Clone 的。
 
     - [https://doc.rust-lang.org/std/task/struct.Waker.html](https://doc.rust-lang.org/std/task/struct.Waker.html)
@@ -188,7 +185,7 @@ pub fn c_async_await_echo(){}
 
     3. 理解并发（waker 并发 和 poll 并发）
 
-    
+
     深入 Futures-rs:
 
     - [Future](https://doc.rust-lang.org/std/future/index.html) and [task](https://doc.rust-lang.org/std/task/index.html)
@@ -198,10 +195,7 @@ pub fn c_async_await_echo(){}
 
 */
 
-pub fn d_futures_rs(){}
-
-
-
+pub fn d_futures_rs() {}
 
 /**
 
@@ -213,7 +207,7 @@ pub fn d_futures_rs(){}
     处理异步事件的三种方式：
     - Callback
     - Promise/Future
-    - async/await 
+    - async/await
 
     async/await 是目前体验最好的方式，Rust 要支持它并不容易。
 
@@ -261,8 +255,8 @@ pub fn d_futures_rs(){}
         //     let c = Pin::new(&mut gen).resume(());
         //     println!("{:?}", c);
         // }
-        
-        
+
+
         let c = Pin::new(&mut gen).resume(());
         println!("{:?}", c);
         let c = Pin::new(&mut gen).resume(());
@@ -282,7 +276,7 @@ pub fn d_futures_rs(){}
     #![feature(generators, generator_trait)]
     use std::ops::{Generator, GeneratorState};
     use std::pin::Pin;
-    
+
     enum __Gen {
         // (0) 初始状态
         Start,
@@ -330,12 +324,12 @@ pub fn d_futures_rs(){}
             }
         }
     }
-    
+
     fn main(){
         let mut gen = {
             __Gen::Start
         };
-        
+
         for _ in 0..4 {
             println!("{:?}", unsafe{ Pin::new(&mut gen).resume(())});
         }
@@ -349,9 +343,9 @@ pub fn d_futures_rs(){}
     #![allow(unused)]
     #![feature(generators, generator_trait)]
     use std::pin::Pin;
-    
+
     use std::ops::Generator;
-    
+
     pub fn up_to(limit: u64) -> impl Generator<Yield = u64, Return = u64> {
         move || {
             for x in 0..limit {
@@ -365,7 +359,7 @@ pub fn d_futures_rs(){}
         let mut b = up_to(a);
         unsafe {
             for _ in 0..=10{
-                let c = Pin::new(&mut b).resume(());   
+                let c = Pin::new(&mut b).resume(());
                 println!("{:?}", c);
             }
         }
@@ -379,9 +373,9 @@ pub fn d_futures_rs(){}
     #![allow(unused)]
     #![feature(generators, generator_trait)]
     use std::pin::Pin;
-    
+
     use std::ops::{Generator, GeneratorState};
-    
+
     pub fn up_to() -> impl Generator<Yield = u64, Return = ()> {
         move || {
             let mut x = 0;
@@ -411,10 +405,10 @@ pub fn d_futures_rs(){}
 
     #![allow(unused)]
     #![feature(generators, generator_trait)]
-    
+
     use std::ops::{Generator, GeneratorState};
     use std::pin::Pin;
-    
+
     pub fn up_to(limit: u64) -> impl Generator<Yield = (), Return = Result<u64, ()>> {
         move || {
             for x in 0..limit {
@@ -443,10 +437,10 @@ pub fn d_futures_rs(){}
     ```rust
     #![allow(unused)]
     #![feature(generators, generator_trait)]
-    
+
     use std::ops::Generator;
     use std::pin::Pin;
-    
+
     pub fn up_to(limit: u64) -> impl Generator<Yield = u64, Return = u64> {
         move || {
             let a = 5;
@@ -465,7 +459,7 @@ pub fn d_futures_rs(){}
         let mut b = up_to(a);
         unsafe {
             for _ in 0..=10{
-                let c = Pin::new(&mut b).resume(());   
+                let c = Pin::new(&mut b).resume(());
                 println!("{:?}", c);
             }
         }
@@ -515,14 +509,14 @@ pub fn d_futures_rs(){}
         if let GeneratorState::Complete(()) = gen.resume() {
             ()
         };
-        
+
         if let GeneratorState::Complete(()) = gen2.resume() {
             ()
         };
     }
     enum GeneratorState<Y, R> {
-        Yielded(Y),  
-        Complete(R), 
+        Yielded(Y),
+        Complete(R),
     }
 
     trait Generator {
@@ -555,12 +549,12 @@ pub fn d_futures_rs(){}
                     let borrowed = &to_borrow;
                     let res = borrowed.len();
                     *self = GeneratorA::Yield1 {to_borrow, borrowed: std::ptr::null()};
-                        
+
                     // We set the self-reference here
                     if let GeneratorA::Yield1 {to_borrow, borrowed} = self {
                         *borrowed = to_borrow;
                     }
-                    
+
                     GeneratorState::Yielded(res)
                 }
 
@@ -593,7 +587,7 @@ pub fn d_futures_rs(){}
             yield borrowed.len();
             println!("{} world!", borrowed);
         };
-        
+
         let gen2 = static || {
             let to_borrow = String::from("Hello");
             let borrowed = &to_borrow;
@@ -607,7 +601,7 @@ pub fn d_futures_rs(){}
         if let GeneratorState::Yielded(n) = pinned1.as_mut().resume(()) {
             println!("Gen1 got value {}", n);
         }
-        
+
         if let GeneratorState::Yielded(n) = pinned2.as_mut().resume(()) {
             println!("Gen2 got value {}", n);
         };
@@ -624,15 +618,14 @@ pub fn d_futures_rs(){}
     [https://github.com/whatisaphone/genawaiter](https://github.com/whatisaphone/genawaiter)
 
 */
-pub fn e_generator(){}
-
+pub fn e_generator() {}
 
 /**
 
 
     ### 前奏
 
-    
+
     Safe Rust 无法构建自引用结构体：
 
     ```rust
@@ -681,7 +674,7 @@ pub fn e_generator(){}
     #[derive(Debug)]
     struct SelfReferential {
         a: String,
-        b: *const String, 
+        b: *const String,
     }
 
     impl SelfReferential {
@@ -716,8 +709,8 @@ pub fn e_generator(){}
         println!("a: {:p}, b: {:p}, t: {:p}", &(sf1.a), sf1.b, &(sf2.a));
         // 使用swap()函数交换两者，这里发生了move
         std::mem::swap(&mut sf1, &mut sf2);
-        
-        
+
+
         sf1.a = "I've totally changed now!".to_string();
         println!("a: {}, b: {}", sf2.a(), sf2.b());
         println!("a: {:p}, b: {:p}, t: {:p}", &(sf1.a), sf1.b, &(sf2.a) ) ;
@@ -777,6 +770,21 @@ pub fn e_generator(){}
 
     一个 `Pin<&mut T>` 必须在被引用的T的整个生命周期被保持 pinned，这对于栈上的变量很难确认。
     为了帮助处理这类问题，就有了像[pin-utils](https://docs.rs/pin-utils)这样的 crate。
+
+
+    栈上 vs 堆上：
+
+    ```rust
+    fn main(){
+
+        let s = "hello".to_string();
+        let p = s.as_str();
+        println!("{:p}", p);
+        println!("{:p}", s.as_ptr());
+        println!("{:p}", &s);
+    }
+    ```
+
 
     Pin 到 堆上：
 
@@ -844,7 +852,7 @@ pub fn e_generator(){}
             _pin: PhantomPinned,
         });
         let ptr = &*heap_value as *const SelfReferential;
-        
+
         // 这是安全的，因为修改结构体字段不会让结构体发生move
         unsafe {
             let mut_ref = Pin::as_mut(&mut heap_value);
@@ -853,9 +861,9 @@ pub fn e_generator(){}
 
         println!("heap value at: {:p}", heap_value);
         println!("internal reference: {:p}", heap_value.self_ptr);
-        
+
         // 有效阻止了下面风险代码的发生
-        
+
         let stack_value = mem::replace(&mut *heap_value, SelfReferential {
             self_ptr: 0 as *const _,
             _pin: PhantomPinned,
@@ -914,10 +922,10 @@ pub fn e_generator(){}
     [https://doc.rust-lang.org/std/pin/index.html](https://doc.rust-lang.org/std/pin/index.html)
 
     - [pin-project-lite](https://crates.io/crates/pin-project-lite)
-    
 
-    ### Pin 用法总结
-    
+
+    ### Pin 与 Unpin 属性
+
     来自：[Asynchronous Programming in Rust](https://rust-lang.github.io/async-book/04_pinning/01_chapter.html)
 
     - 如果 `T: Unpin`（默认会实现），那么 `Pin<'a, T>` 完全等价于 `&'a mut T`。换言之： `Unpin` 意味着这个类型被移走也没关系，就算已经被固定了，所以 `Pin` 对这样的类型毫无影响。
@@ -937,25 +945,48 @@ pub fn e_generator(){}
     - 对于 `T: !Unpin` 的被固定数据，你必须维护好数据内存不会无效的约定，或者叫 固定时起直到释放。这是 固定约定 中的重要部分。
 
 
+    ### Pin 用法约定
 
+    -  带 Pin 结构化包装的  投影 （`structural Pin projection`） :  `Pin<&mut Wrapper<Field>> -> Pin<&mut Field>`。 `pin_utils::unsafe_pinned!` 宏可以做。
+        - 当结构体所有的字段都实现 Unpin ，整个结构体才可以实现 Unpin。（不允许任何实现使用不安全的方式将此类字段移出，比如 `Option::take` 是被禁止的）
+        - 结构体不能用 `#[repr(packed)]`
+        - 如果`Drop::drop`不移动任何字段，则整个结构只能实现`Drop`
+    -  不带 Pin 结构化包装的  投影 (`no structural Pin projection`) :  `Pin<&mut Wrapper<Field>> -> &mut Field`。 ` pin_utils::unsafe_unpinned! ` 宏可以做的。
+
+    参考： [futures-util::future::map](https://github.com/rust-lang/futures-rs/blob/0.3.0-alpha.15/futures-util/src/future/map.rs#L14)
+
+    ```rust
+    impl<Fut, F> Map<Fut, F> {
+        unsafe_pinned!(future: Fut); // pin projection -----+
+        unsafe_unpinned!(f: Option<F>); // not pinned --+   |
+    //                                                  |   |
+    //                 ...                              |   |
+    //                                                  |   |
+        fn poll (mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<T> {
+            //                                          |   |
+            match self.as_mut().future().poll(cx) { // <----+ required here
+                Poll::Pending => Poll::Pending, //      |
+                Poll::Ready(output) => { //             |
+                    let f = self.f().take() // <--------+ allows this
+
+    ```
 
 */
-pub fn f_pin_unpin(){}
+pub fn f_pin_unpin() {}
 
+/**
+
+    # `no-std` 下的异步
+
+    - [futures-micro](https://github.com/irrustible/futures-micro)
+    - [embassy](https://github.com/embassy-rs/embassy)
+    - [executor for no-std](https://github.com/richardanaya/executor)
+
+*/
+pub fn no_std_async() {}
 
 /**
     # 一个异步缓存代码实现源码导读 ：[retainer](https://github.com/ChaosStudyGroup/retainer)
 
 */
-pub fn async_cache_demo(){}
-
-
-/**
- 
-    # 嵌入式异步运行时
-
-    - [futures-micro](https://github.com/irrustible/futures-micro)
-    - [embassy](https://github.com/embassy-rs/embassy)
-
-*/
-pub fn no_std_async(){}
+pub fn async_cache_demo() {}

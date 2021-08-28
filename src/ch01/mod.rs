@@ -1,11 +1,9 @@
-
 //! 第一章：Rust语言基础
 //!
 
-
-pub mod lexical;
-pub mod expr;
 pub mod ctfe;
+pub mod expr;
+pub mod lexical;
 
 /// # Examples
 ///
@@ -13,9 +11,8 @@ pub mod ctfe;
 ///
 /// ```
 ///   println!("第1章：{}", "Rust语言基础");
-/// 
+///
 /// ```
-pub fn title(){
+pub fn title() {
     println!("第1章：{}", "Rust语言基础");
 }
-

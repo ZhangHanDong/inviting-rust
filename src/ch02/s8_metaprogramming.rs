@@ -1,6 +1,6 @@
 //! 第二章：Rust核心概念
 //! 2.7 元编程
-//! 
+//!
 //! 内容包括：
 //!  - 反射
 //!  - 宏
@@ -16,105 +16,102 @@
 //!         - dervie_more
 //!         - metric
 //!         - reflect
-//! 
-//! 
-
+//!
+//!
 
 /**
-   
-   # 动态自省
 
-   示例1:
+  # 动态自省
 
-   [https://doc.rust-lang.org/std/any/index.html](https://doc.rust-lang.org/std/any/index.html)
+  示例1:
 
-    示例2:
+  [https://doc.rust-lang.org/std/any/index.html](https://doc.rust-lang.org/std/any/index.html)
 
-    ```rust
+   示例2:
 
-    use std::any::Any;
+   ```rust
 
-    trait Foo: Any {
-        fn as_any(&self) -> &Any;
-    }
+   use std::any::Any;
 
-    impl<T: Any> Foo for T {
-        fn as_any(&self) -> &Any {
-            self
-        }
-    }
+   trait Foo: Any {
+       fn as_any(&self) -> &Any;
+   }
 
-    struct Bar {}
+   impl<T: Any> Foo for T {
+       fn as_any(&self) -> &Any {
+           self
+       }
+   }
 
-    struct Baz {}
+   struct Bar {}
 
-    impl PartialEq for Foo {
-        fn eq(&self, other: &Foo) -> bool {
-            let me = self.as_any();
-            let you = other.as_any();
-            if me.is::<Bar>() && you.is::<Bar>() {
-                true
-            } else if me.is::<Baz>() && you.is::<Baz>() {
-                true
-            } else {
-                false
-            }
-        }
-    }
+   struct Baz {}
 
-    fn main() {
-        let bar: Bar = Bar {};
-        let baz: Baz = Baz {};
-        let foo1: &Foo = &bar;
-        let foo2: &Foo = &baz;
-        println!("{:?}", foo1 == foo2);
-    }
+   impl PartialEq for Foo {
+       fn eq(&self, other: &Foo) -> bool {
+           let me = self.as_any();
+           let you = other.as_any();
+           if me.is::<Bar>() && you.is::<Bar>() {
+               true
+           } else if me.is::<Baz>() && you.is::<Baz>() {
+               true
+           } else {
+               false
+           }
+       }
+   }
 
-    ```
+   fn main() {
+       let bar: Bar = Bar {};
+       let baz: Baz = Baz {};
+       let foo1: &Foo = &bar;
+       let foo2: &Foo = &baz;
+       println!("{:?}", foo1 == foo2);
+   }
 
-    示例 3:
+   ```
 
-    ```rust
-        use std::any::Any;
-        struct UnStatic<'a> { x: &'a i32 }
-        fn main() {
-            let a = 42;
-            let v = UnStatic { x: &a };
-            let mut any: &Any;
-            //any = &v;  // Compile Error!
-        }
-    ```
-    
-    修正：
+   示例 3:
 
-    ```rust
-    use std::any::Any;
-    struct UnStatic<'a> { x: &'a i32 }
-    static ANSWER: i32 = 42;
-    fn main() {
-        let v = UnStatic { x: &ANSWER };
-        let mut a: &Any;
-        a = &v;
-        assert!(a.is::<UnStatic>());
-    }
-    ```
+   ```rust
+       use std::any::Any;
+       struct UnStatic<'a> { x: &'a i32 }
+       fn main() {
+           let a = 42;
+           let v = UnStatic { x: &a };
+           let mut any: &Any;
+           //any = &v;  // Compile Error!
+       }
+   ```
 
-    示例4:
+   修正：
 
-    oso 库应用
+   ```rust
+   use std::any::Any;
+   struct UnStatic<'a> { x: &'a i32 }
+   static ANSWER: i32 = 42;
+   fn main() {
+       let v = UnStatic { x: &ANSWER };
+       let mut a: &Any;
+       a = &v;
+       assert!(a.is::<UnStatic>());
+   }
+   ```
 
-    [https://github.com/osohq/oso/blob/main/languages/rust/oso/src/host/class.rs](https://github.com/osohq/oso/blob/main/languages/rust/oso/src/host/class.rs)
+   示例4:
 
-    示例 5:
+   oso 库应用
 
-    bevy_reflect 库应用
+   [https://github.com/osohq/oso/blob/main/languages/rust/oso/src/host/class.rs](https://github.com/osohq/oso/blob/main/languages/rust/oso/src/host/class.rs)
 
-    [https://github.com/bevyengine/bevy/blob/main/crates/bevy_reflect/src/lib.rs](https://github.com/bevyengine/bevy/blob/main/crates/bevy_reflect/src/lib.rs)
+   示例 5:
 
- */
-pub fn any_refection(){}
+   bevy_reflect 库应用
 
+   [https://github.com/bevyengine/bevy/blob/main/crates/bevy_reflect/src/lib.rs](https://github.com/bevyengine/bevy/blob/main/crates/bevy_reflect/src/lib.rs)
 
+*/
+pub fn any_refection() {}
 
 /**
   # 声明宏
@@ -125,8 +122,8 @@ pub fn any_refection(){}
 
   ```rust
     macro_rules! unless {
-        ($arg:expr, $branch:expr) => ( if !$arg { $branch };); 
-    } 
+        ($arg:expr, $branch:expr) => ( if !$arg { $branch };);
+    }
     fn cmp(a: i32, b: i32) {
         unless!( a > b, {
             println!("{} < {}", a, b);
@@ -163,8 +160,8 @@ pub fn any_refection(){}
         ($($key:expr => $value:expr),* ) => {
             {
                 let mut _map = ::std::collections::HashMap::new();
-                $(  
-                    _map.insert($key, $value); 
+                $(
+                    _map.insert($key, $value);
                 )*
                 _map
             }
@@ -201,7 +198,7 @@ pub fn any_refection(){}
         let map = hashmap!{
             "a" => 1,
             "b" => 2,
-            "c" => 3, 
+            "c" => 3,
         };
         assert_eq!(map["a"], 1);
     }
@@ -225,7 +222,7 @@ pub fn any_refection(){}
         let map = hashmap!{
             "a" => 1,
             "b" => 2,
-            "c" => 3, 
+            "c" => 3,
         };
         assert_eq!(map["a"], 1);
     }
@@ -245,7 +242,7 @@ pub fn any_refection(){}
         ($($key:expr => $value:expr),* $(,)*) => {
             {
             let _cap = count!($($key),*);
-            let mut _map 
+            let mut _map
                 = ::std::collections::HashMap::with_capacity(_cap);
             $(
                 _map.insert($key, $value);
@@ -258,24 +255,24 @@ pub fn any_refection(){}
         let map = hashmap!{
             "a" => 1,
             "b" => 2,
-            "c" => 3, 
+            "c" => 3,
         };
         assert_eq!(map["a"], 1);
     }
 
   ```
 
-  示例6: 
+  示例6:
 
   ```rust
     macro_rules! hashmap {
         (@unit $($x:tt)*) => (());
-        (@count $($rest:expr),*) => 
+        (@count $($rest:expr),*) =>
             (<[()]>::len(&[$(hashmap!(@unit $rest)),*]));
         ($($key:expr => $value:expr),* $(,)*) => {
             {
                 let _cap = hashmap!(@count $($key),*);
-                let mut _map = 
+                let mut _map =
                     ::std::collections::HashMap::with_capacity(_cap);
             $(
                 _map.insert($key, $value);
@@ -288,7 +285,7 @@ pub fn any_refection(){}
     let map = hashmap!{
         "a" => 1,
         "b" => 2,
-        "c" => 3, 
+        "c" => 3,
     };
     assert_eq!(map["a"], 1);
     }
@@ -309,10 +306,7 @@ pub fn any_refection(){}
     }
   ```
 */
-pub fn declarative_macros(){}
-
-
-
+pub fn declarative_macros() {}
 
 /**
 
@@ -422,9 +416,7 @@ pub fn declarative_macros(){}
 - [derive_more](https://github.com/JelteF/derive_more)
 
 */
-pub fn derive_proc_macros(){}
-
-
+pub fn derive_proc_macros() {}
 
 /**
 
@@ -435,7 +427,7 @@ pub fn derive_proc_macros(){}
     有用的第三方库介绍：[darling](https://github.com/TedDriggs/darling)
 
     案例： [elichai/log-derive](https://github.com/elichai/log-derive)
- 
+
 
 */
-pub fn attributes_proc_macros(){}
+pub fn attributes_proc_macros() {}

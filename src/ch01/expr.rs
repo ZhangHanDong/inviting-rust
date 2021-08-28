@@ -1,8 +1,8 @@
 #![allow(unused_variables)]
 //! 第一章：Rust语言基础
 //! 1.4 语法面面观（二）：面向表达式（上）
-//! 
-//! 
+//!
+//!
 //!    
 
 /**
@@ -25,21 +25,20 @@
         let mut a = 41 ;
         add_one(&mut a) ;
         println!("{:?}", a) ;
-        
+
         let a = 41;
         let b = plus_one(&a);
         println!("{:?}", b) ;
-        
+
         let mut h = HashMap::new();
         h.insert("anwser", 42);
         println!("anwser is {:?}", h["anwser"]);
     }
     ```
 */
-pub fn eop(){ 
+pub fn eop() {
     println!("1.4 : Expression-Oriented programming");
 }
-
 
 /**
 
@@ -51,7 +50,7 @@ pub fn eop(){
 
     ```
     fn main(){
-        ; 
+        ;
         ;
         {
             ()
@@ -67,14 +66,13 @@ pub fn eop(){
     }
     ```
 */
-pub fn semi_and_block_expr(){ 
+pub fn semi_and_block_expr() {
     println!("1.4 : Semi vs Block ");
 }
 
-
 /**
 
-    ### FizzBuzz in match 
+    ### FizzBuzz in match
 
     ```
     fn main() {
@@ -86,17 +84,16 @@ pub fn semi_and_block_expr(){
                 (_, _) => println!("{}", i)
             }
         }
-    }   
+    }
     ```
 */
-pub fn fizzbuzz_match(){ 
+pub fn fizzbuzz_match() {
     println!(" 1.4 : FizzBuzz in match ");
 }
 
-
 /**
 
-    ### FizzBuzz in if 
+    ### FizzBuzz in if
 
     ```
     fn main() {
@@ -111,6 +108,6 @@ pub fn fizzbuzz_match(){
     ```
 
 */
-pub fn fizzbuzz_if(){ 
+pub fn fizzbuzz_if() {
     println!(" 1.4 : FizzBuzz in if ");
 }

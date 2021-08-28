@@ -1,4 +1,3 @@
-
 #![doc(
     html_playground_url = "https://play.rust-lang.org/",
     test(no_crate_inject, attr(deny(warnings))),
@@ -8,3 +7,4 @@
 pub mod ch01;
 pub mod ch02;
 pub mod ch03;
+pub mod ch04;

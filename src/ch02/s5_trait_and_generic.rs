@@ -1,119 +1,116 @@
 //! 第二章：Rust核心概念
 //! 2.4 trait 和 泛型
-//! 
-//! 
-
-
+//!
+//!
 
 /**
 
-    # 概念介绍
-    
-    ### trait 四种作用
+   # 概念介绍
 
-    - 接口 (interface)
-    - 类型标记（Mark)
-    - 泛型限定（trait bound）
-    - 抽象类型（trait object）
+   ### trait 四种作用
 
-
-   ### 静态分发（单态化 - Monomorphized）
-
-    ```rust
-    use std::string::ToString;
-
-    fn print<T: ToString>(v: T) {
-        println!("{}", v.to_string());
-    }
-    ```
-
-    或 `impl Trait`语法
-
-    ```rust
-    use std::string::ToString;
-
-    #[inline(never)]
-    fn print(v: &impl ToString) {
-        println!("{}", v.to_string());
-    }
-    ```
-
-    使用 `impl Trait` 解决问题：
+   - 接口 (interface)
+   - 类型标记（Mark)
+   - 泛型限定（trait bound）
+   - 抽象类型（trait object）
 
 
-    ```rust
-    // error codes：
+  ### 静态分发（单态化 - Monomorphized）
 
-    use std::fmt::Display;
+   ```rust
+   use std::string::ToString;
 
-    fn main() {
-        println!("{}", make_value(0));
-        println!("{}", make_value(1));
-    }
+   fn print<T: ToString>(v: T) {
+       println!("{}", v.to_string());
+   }
+   ```
 
-    fn make_value<T: Display>(index: usize) -> T {
-        match index {
-            0 => "Hello, World",
-            1 => "Hello, World (1)",
-            _ => panic!(),
-        }
-    }
+   或 `impl Trait`语法
 
-    ```
+   ```rust
+   use std::string::ToString;
 
-    修正：
+   #[inline(never)]
+   fn print(v: &impl ToString) {
+       println!("{}", v.to_string());
+   }
+   ```
 
-    ```
-    use std::fmt::Display;
-
-    fn make_value(index: usize) -> impl Display {
-        match index {
-            0 => "Hello, World",
-            1 => "Hello, World (1)",
-            _ => panic!(),
-        }
-    }
-
-    ```
-
-    `impl Trait` 生命周期相关：
-
-    ```rust
-
-    // error
-    fn make_debug<T>(_: T) -> impl std::fmt::Debug + 'static{
-        42u8
-    }
-
-    // fn make_debug<'a, T: 'static>(_: &'a T) -> impl std::fmt::Debug + 'static{
-    //     42u8
-    // }
-
-    fn test() -> impl std::fmt::Debug {
-        let value = "value".to_string();
-        make_debug(&value)
-    }
-    ```
-
-   实际案例 - 模版模式：[https://github.com/actix/actix-extras/tree/master/actix-web-httpauth](https://github.com/actix/actix-extras/tree/master/actix-web-httpauth)
+   使用 `impl Trait` 解决问题：
 
 
-   # trait 一致性
+   ```rust
+   // error codes：
 
-    trait 和 类型 必须有一个在本地。
+   use std::fmt::Display;
+
+   fn main() {
+       println!("{}", make_value(0));
+       println!("{}", make_value(1));
+   }
+
+   fn make_value<T: Display>(index: usize) -> T {
+       match index {
+           0 => "Hello, World",
+           1 => "Hello, World (1)",
+           _ => panic!(),
+       }
+   }
+
+   ```
+
+   修正：
+
+   ```
+   use std::fmt::Display;
+
+   fn make_value(index: usize) -> impl Display {
+       match index {
+           0 => "Hello, World",
+           1 => "Hello, World (1)",
+           _ => panic!(),
+       }
+   }
+
+   ```
+
+   `impl Trait` 生命周期相关：
+
+   ```rust
+
+   // error
+   fn make_debug<T>(_: T) -> impl std::fmt::Debug + 'static{
+       42u8
+   }
+
+   // fn make_debug<'a, T: 'static>(_: &'a T) -> impl std::fmt::Debug + 'static{
+   //     42u8
+   // }
+
+   fn test() -> impl std::fmt::Debug {
+       let value = "value".to_string();
+       make_debug(&value)
+   }
+   ```
+
+  实际案例 - 模版模式：[https://github.com/actix/actix-extras/tree/master/actix-web-httpauth](https://github.com/actix/actix-extras/tree/master/actix-web-httpauth)
+
+
+  # trait 一致性
+
+   trait 和 类型 必须有一个在本地。
 
 
 
- */
-pub fn trait_concept(){
+*/
+pub fn trait_concept() {
     println!("trait 概念")
 }
 
-
 /**
- 
 
-# 动态分发    
+
+# 动态分发
 
     ### trait 对象
 
@@ -171,7 +168,7 @@ pub fn trait_concept(){
     struct Bar {}
 
     fn main(){
-        
+
 
         let foo_class: Class = Class::new::<Foo>();
         let bar_class: Class = Class::new::<Bar>();
@@ -183,13 +180,12 @@ pub fn trait_concept(){
     ```
 
 */
-pub fn trait_dyn_dispatch(){
+pub fn trait_dyn_dispatch() {
     println!("trait 动态分发");
 }
 
-
 /**
-   
+
 # trait 对象本质
 
 
@@ -296,9 +292,9 @@ Cat Layout                     Trait Object
                                                          +---------------+
 
 ```
-    
+
 假设：trait Mammal + Clone 布局图：
-    
+
 注意：非法
 
 ```text
@@ -339,10 +335,10 @@ Cat Layout                     Trait Object
 
 ```
 
-    假设：trait 继承(`trait MammalClone: Mammal+Clone`)布局图： 
+    假设：trait 继承(`trait MammalClone: Mammal+Clone`)布局图：
 
     注意：非法
-  
+
 ```text
 
                                                             MammalClone
@@ -367,7 +363,7 @@ Cat Layout                     Trait Object
 
 
 */
-pub fn trait_object(){
+pub fn trait_object() {
     println!("trait 动态分发");
 }
 
@@ -378,11 +374,11 @@ pub fn trait_object(){
 
 
 ### 对象安全
-    
+
     一个 trait 如果能实现自己，就认为它是对象安全的
 
 为什么必须是对象安全呢？
-    
+
 trait对象，在运行时已经擦除了类型信息，要通过虚表调用相应的方法。不像静态分发那样，trait对象不是为每个类型都实现trait的方法，而是只实现一个副本（自动为其实现自身），结合虚函数去调用。
 
 现在想一个问题： 假如那个类型没有实现这个方法怎么办？
@@ -423,7 +419,7 @@ trait对象，在运行时已经擦除了类型信息，要通过虚表调用相
         fn last_name(&self)  -> &'static str{
             "Stark"
         }
-        
+
         fn totem(&self)  -> &'static str{
             "Wolf"
         }
@@ -431,7 +427,7 @@ trait对象，在运行时已经擦除了类型信息，要通过虚表调用相
 
     impl TullyFamily for Children {
         fn territory(&self)  -> &'static str{
-            "Riverrun City" 
+            "Riverrun City"
         }
     }
 
@@ -444,7 +440,7 @@ trait对象，在运行时已经擦除了类型信息，要通过虚表调用相
             println!("hello : {} Stark ", first_name);
             People{first_name: first_name}
         }
-        
+
         fn first_name(&self) -> &'static str{
             self.first_name
         }
@@ -460,31 +456,30 @@ trait对象，在运行时已经擦除了类型信息，要通过虚表调用相
     fn main() {
         let sansa = People::new("Sansa");
         let aray = People::new("Aray");
-        
+
         let starks: Box<dyn Children> = Box::new(sansa);
         full_name(starks);
-        
+
         let starks: Box<dyn Children> = Box::new(aray);
         full_name(starks);
     }
 
 ```
-    
-    
+
+
 对象安全规则 Rust 源码：[https://github.com/rust-lang/rust/blob/941343e0871dd04ea774e8cee7755461b144ef29/compiler/rustc_middle/src/traits/mod.rs#L643](https://github.com/rust-lang/rust/blob/941343e0871dd04ea774e8cee7755461b144ef29/compiler/rustc_middle/src/traits/mod.rs#L643)
 
 
 */
-pub fn object_safety(){
+pub fn object_safety() {
     println!("对象安全本质");
 }
-
 
 /**
 
 # 当不能实现 trait 对象当时候该如何？
 
-1. 将其转化为 Enum 
+1. 将其转化为 Enum
 
 trait 对象代码：
 
@@ -626,10 +621,9 @@ fn main() {
 2. 利用 “魔法” ，相当于加一层代理 ： 参考：[https://github.com/dtolnay/erased-serde/blob/master/explanation/main.rs](https://github.com/dtolnay/erased-serde/blob/master/explanation/main.rs)
 
 */
-pub fn trait_object_to_enum(){
+pub fn trait_object_to_enum() {
     println!("blanket impls");
 }
-
 
 /**
 
@@ -735,14 +729,13 @@ pub fn trait_object_to_enum(){
 
 
 */
-pub fn blanket_impls(){
+pub fn blanket_impls() {
     println!("blanket impls");
 }
 
-
 /**
 
-    ### 对象安全规则里，为什么需要 `Self: Sized` 
+    ### 对象安全规则里，为什么需要 `Self: Sized`
 
     思考：什么情况下需要 `Self: Sized` ？
 
@@ -754,12 +747,12 @@ pub fn blanket_impls(){
         fn new() -> Self where Self: Sized {
             Self::build(0)
         }
-        
+
 
         fn t(&self){
             println!("T");
         }
-        
+
         fn p(&self){
             self.t();
             println!("hello");
@@ -772,7 +765,7 @@ pub fn blanket_impls(){
         fn build(param: usize) -> Self{
             A
         }
-        
+
     }
 
     fn main(){
@@ -786,15 +779,15 @@ pub fn blanket_impls(){
 
     trait Test {
         fn foo(self);
-        
+
         fn works(self: Box<Self>){
             println!("hello Trait");
         }
-        
+
         fn fails(self: Box<Self>)
         where Self: Sized
         {
-            self.foo()    
+            self.foo()
         }
     }
 
@@ -834,11 +827,11 @@ pub fn blanket_impls(){
 
     ```
 
-    结论： 
+    结论：
     1. `Self: Sized` 为了保证 trait 默认实现内部的 Self 调用都是合法的。
     2. 防止 函数体内包含了 Self 的默认实现混入虚表。因为虚表内 Self 无法确定。
 
-    ### Sized  vs  ?Sized 
+    ### Sized  vs  ?Sized
 
     ```rust
     trait WithConstructor {
@@ -847,10 +840,10 @@ pub fn blanket_impls(){
         fn new() -> Self where Self: ?Sized {
             Self::build(0)
         }
-    } 
+    }
     ```
 
 */
-pub fn trait_self_sized_bound(){
+pub fn trait_self_sized_bound() {
     println!("trait object vs Self: Sized");
 }

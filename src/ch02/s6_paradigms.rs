@@ -1,13 +1,13 @@
 //! 第二章：Rust核心概念
 //! 2.5 编程范式：面向编译器编程
-//! 
+//!
 //! 讨论：
-//! 
+//!
 //! 1. Rust 是 FP 语言吗？
 //! 2. Rust 是 OOP 语言吗？
 //! 3. 如果都不是，那 Rust 是面向啥的语言 ？ 面向编译器。
-//! 
-//! 
+//!
+//!
 
 /**
 
@@ -131,7 +131,7 @@
     5. 命令式编程为主（类 C），OOP 和 FP Style 辅助
 
     典型的实现：[std::cell::Cell](https://github.com/rust-lang/rust/blob/master/library/core/src/cell.rs)
-    
+
     Cell 的语义：
 
     1. 在不可变引用的基础上构造一个安全的内部可变性
@@ -190,6 +190,6 @@
     }
     ```
 */
-pub fn compiler_oriented_programming(){
+pub fn compiler_oriented_programming() {
     println!("Compiler-Oriented Programming")
 }

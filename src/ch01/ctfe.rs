@@ -1,10 +1,9 @@
 #![allow(unused_variables)]
 //! 第一章：Rust语言基础
 //! 1.4 语法面面观（二）：面向表达式（中）
-//! 
-//! 
+//!
+//!
 //!    
-
 
 /**
     ### 必须是常量表达式才能在常量上下文使用
@@ -16,7 +15,7 @@
     }
     ```
 */
-pub fn must_const_expr(){ 
+pub fn must_const_expr() {
     println!(" 1.4 : Must Const erpr in Const Context ");
 }
 
@@ -35,7 +34,7 @@ pub fn must_const_expr(){
     ```
 
 */
-pub fn const_array_len(){ 
+pub fn const_array_len() {
     println!("1.4 : Expression-Oriented programming: const array len");
 }
 
@@ -78,11 +77,9 @@ pub fn const_array_len(){
     ```
 
 */
-pub fn const_fib(){ 
+pub fn const_fib() {
     println!("1.4 : Expression-Oriented programming: const fib");
 }
-
-
 
 /**
 
@@ -112,10 +109,10 @@ pub fn const_fib(){
         dbg!(UNIT_TUPLE);
         dbg!(AREA);
     }
-    
+
     ```
 */
-pub fn const_fn_(){ 
+pub fn const_fn_() {
     println!(" 1.4 : Const fn ");
 }
 
@@ -134,13 +131,13 @@ pub fn const_fn_(){
     // Error
     const S : String = hello();
 
-    fn main(){ 
+    fn main(){
         println!(" {:?} ", S);
     }
 
     ```
 */
-pub fn const_fn_error(){ 
+pub fn const_fn_error() {
     println!(" 1.4 : Const fn Error ");
 }
 
@@ -161,10 +158,9 @@ pub fn const_fn_error(){
 
     ```
 */
-pub fn fixed_const_fn_error(){ 
+pub fn fixed_const_fn_error() {
     println!(" 1.4 : Fixed Const fn Error ");
 }
-
 
 /**
 
@@ -181,7 +177,7 @@ pub fn fixed_const_fn_error(){
 
     ```
 */
-pub fn others_const_fn(){ 
+pub fn others_const_fn() {
     println!(" 1.4 : Others Const fn  ");
 }
 
@@ -199,7 +195,7 @@ pub fn others_const_fn(){
     ```
 
 */
-pub fn mir_show(){ 
+pub fn mir_show() {
     println!(" 1.4 : MIR show ");
 }
 
@@ -228,7 +224,7 @@ pub fn mir_show(){
         assert_eq!(y, 6);
 
         let x;
-        // while true { x = 1; break; } 
+        // while true { x = 1; break; }
         loop { x = 1; break; }
         println!("{}", x);
 
@@ -236,13 +232,12 @@ pub fn mir_show(){
     ```
 
 */
-pub fn if_while_true(){
+pub fn if_while_true() {
     println!(" 1.4 : If True && While True")
 }
 
-
 /**
-    ### const generic 
+    ### const generic
 
     ```
     #![feature(min_const_generics)]
@@ -263,19 +258,19 @@ pub fn if_while_true(){
                 length: 0,
             }
         }
-        
+
         #[inline]
         pub const fn len(&self) -> usize { self.length }
-        
+
         #[inline]
         pub const fn is_empty(&self) -> bool { self.len() == 0 }
-        
+
         #[inline]
         pub const fn capacity(&self) -> usize { N }
-        
+
         #[inline]
         pub const fn is_full(&self) -> bool { self.len() >= self.capacity() }
-        
+
     }
 
     impl<T, const N: usize> Drop for ArrayVec<T, { N }> {
@@ -294,11 +289,9 @@ pub fn if_while_true(){
     }
     ```
 */
-pub fn const_generic_show(){
+pub fn const_generic_show() {
     println!(" 1.4 : Const Generic Show")
 }
-
-
 
 /**
 
@@ -317,6 +310,6 @@ pub fn const_generic_show(){
 
     ```
 */
-pub fn array_chunk_show(){
+pub fn array_chunk_show() {
     println!(" 1.4 : Array Chunks Show")
 }

@@ -1,25 +1,24 @@
 //! 第三章：Rust 异步编程概念
 //!
 //! # 3.3 异步 运行时
-//! 
-//! 
+//!
+//!
+//! - [smol](https://github.com/smol-rs/smol)
 //! - [tokio](https://github.com/tokio-rs/tokio)
 //! - [async-std](https://github.com/async-rs/async-std)
-//! - [smol](https://github.com/smol-rs/smol)
 //! - [bastion](https://github.com/bastion-rs/bastion)
 //! - [glommio](https://github.com/DataDog/glommio)
 //! - [embassy](https://github.com/embassy-rs/embassy)
-//! 
+//!
 //! 框架剖析：
-//! 
-//! 
+//!
+//!
 //! - [rocket](https://github.com/SergioBenitez/Rocket)
 //! - [acitx-web](https://github.com/actix/actix-web)
 //! - [tide](https://github.com/http-rs/tide)
 //! - [lunatic](https://github.com/lunatic-solutions/lunatic)
-//! 
-//! 
-
+//!
+//!
 
 /**
 
@@ -29,7 +28,7 @@
 
     以下是关键组件。
 
-    ## async-task 
+    ## async-task
 
     对 异步任务 的抽象
 
@@ -37,9 +36,9 @@
 
     异步任务调度和执行，依赖 async-task
 
-    ## async-io 
+    ## async-io
 
-    对接底层I/O，并实现了 Reactor ，依赖 polling 
+    对接底层I/O，并实现了 Reactor ，依赖 polling
 
     ## polling
 
@@ -51,16 +50,14 @@
 
 
 */
-pub fn a_smol_runtime(){}
-
+pub fn a_smol_runtime() {}
 
 /**
 
     # async-std 运行时架构
 
 */
-pub fn b_async_std_runtime(){}
-
+pub fn b_async_std_runtime() {}
 
 /**
 
@@ -68,6 +65,13 @@ pub fn b_async_std_runtime(){}
 
     [io_uring 支持](https://github.com/tokio-rs/tokio-uring/pull/1)
 */
-pub fn c_tokio_runtime(){}
+pub fn c_tokio_runtime() {}
 
+/**
 
+    # 其他运行时 架构
+
+    - [https://github.com/DataDog/glommio](https://github.com/DataDog/glommio)
+    - [https://github.com/bastion-rs/bastion](https://github.com/bastion-rs/bastion)
+*/
+pub fn d_others_runtime() {}

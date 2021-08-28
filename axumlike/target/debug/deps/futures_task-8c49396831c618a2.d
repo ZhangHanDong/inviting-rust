@@ -1,0 +1,11 @@
+/Users/zhangalex/Work/Consultation/GeekTime/inviting-rust/axumlike/target/debug/deps/futures_task-8c49396831c618a2.rmeta: /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/lib.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/spawn.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/arc_wake.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/waker.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/waker_ref.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/future_obj.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/noop_waker.rs
+
+/Users/zhangalex/Work/Consultation/GeekTime/inviting-rust/axumlike/target/debug/deps/futures_task-8c49396831c618a2.d: /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/lib.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/spawn.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/arc_wake.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/waker.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/waker_ref.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/future_obj.rs /Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/noop_waker.rs
+
+/Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/lib.rs:
+/Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/spawn.rs:
+/Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/arc_wake.rs:
+/Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/waker.rs:
+/Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/waker_ref.rs:
+/Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/future_obj.rs:
+/Users/zhangalex/.cargo/registry/src/rsproxy.cn-8f6827c7555bfaf8/futures-task-0.3.16/src/noop_waker.rs:

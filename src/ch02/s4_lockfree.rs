@@ -1,10 +1,9 @@
 //! 第二章：Rust核心概念
 //! 2.3 Lockfree
-//! 
-
+//!
 
 /**
- 
+
     ### 并发编程注重的三点：
 
     1. 原子性。保证操作是原子的。
@@ -28,7 +27,7 @@
 
 
     ###  理解无锁并发的关键在于理解计算机组成
- 
+
     ```text
     +------+    +------+    +------+
     | core |    | core |    | core |
@@ -60,12 +59,12 @@
     思考：下面代码最终执行后 x 和 y 的状态上什么？
 
     ``` text
-    // THREAD 1                       
+    // THREAD 1
 
     if unsafe { *x == 1 } {
         unsafe { *y += 1 }
-    }                   
-    
+    }
+
     // THREAD 2
     unsafe {
         *y = 10;
@@ -86,10 +85,10 @@
     > 这里要注意，CPU 并不是做来某些操作马上发出消息或者是收到消息马上就执行相应操作的。也就是说，CPU 通信的这些消息都是异步的。
     > 如果 CPU 多核之间用同步通信的话，性能上无法接受。比如一个 CPU 要等待其他 CPU 来确认信息，或从其他 CPU 获取最新数据等。
     > 所以，为了让 CPU 核之间可以高性能地同步信息（保证cpu乱序执行指令的同时，还要保证程序正确性），就引入了内存屏障的技术。
-    
+
 
     ### 内存屏障
-    
+
     内存屏障允许开发者在编写代码等时候在需要等地方加入它。
 
     内存屏障分为：
@@ -128,7 +127,7 @@
 
     Rust 标准库中定义的原子类型：[std::sync::atomic: https://doc.rust-lang.org/stable/std/sync/atomic/index.html](https://doc.rust-lang.org/stable/std/sync/atomic/index.html)
     其中`// std::sync::atomic::Ordering`定义了 Rust 支持的内存顺序，官方文档指出，当前和 Cpp20 的内存顺序是一致的。
-    
+
 
     ```rust
     // std::sync::atomic::Ordering
@@ -159,7 +158,7 @@
     - SeqCst，
         - 如果是读取就是 acquire 语义，如果是写入就是 release 语义，如果是读取+写入就是 acquire-release 语义。
         - 所有线程都能以相同的顺序看到所有顺序一致的操作。
-    
+
     不同对内存顺序，对应不同对内存屏障，进一步，也代表了不同的性能。
     在竞争条件比较激烈的情况下，Relaxed 性能是最好的，因为它不需要任何内存屏障，这就意味着CPU之间不需要进行一致性同步。
     相对而言，SeqCst 就是性能最差的那个了，因为它需要 CPU 同步所有指令。
@@ -178,7 +177,7 @@
     - `compare_exchange_weak
     - `fetch_add(n), fetch_sub(n)`，原子地做x += n, x-= n，返回修改之前的值。
 
-   
+
     使用原子类型需要注意的是：
 
     - Store操作，可选内存顺序：Relaxed, Release, SeqCst。否则panic。
@@ -188,7 +187,7 @@
 
      ```rust
     // 实现一个简单的自旋锁（spinlock）
-    
+
     use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::{thread, time};
@@ -263,7 +262,7 @@
     > 然后线程切回 T1 ，T1 看到栈顶（a）的地址和它之前获得的 a 地址相同，然后将 栈顶设置为 b （a.next），然而 b 早就被释放来。
 
     这就是 ABA 问题。ABA 问题本质是内存回收问题。当 b 被弹出当时候，要保障它当内存不能被立即重用。
-    
+
     解决该问题的思路有多种：引用计数、分代回收（Epoch Based Reclamation）和 险象指针（Hazard pointer）。
 
     注意：ABA 问题一般是发生在 X86 架构上 cas 原子操作的时候。ARM 架构已经从根源上解决了 ABA 问题。
@@ -276,4 +275,4 @@
 
 
 */
-pub fn memory_reordering(){}
+pub fn memory_reordering() {}

@@ -38,10 +38,9 @@
         thread::sleep(duration);
     }
 */
-pub fn understand_local_thread(){ 
+pub fn understand_local_thread() {
     println!(" 理解本地线程 ");
 }
-
 
 /**
     ### 线程间共享数据
@@ -77,7 +76,7 @@ pub fn understand_local_thread(){
     借用检查阻止并发Bug
 
     ```
-    // invalid 
+    // invalid
     fn inner_func(vref: &mut Vec<u32>) {
         std::thread::spawn(move || {
         vref.push(3);
@@ -118,7 +117,7 @@ pub fn understand_local_thread(){
         test("hello");                // &'static str
         test(String::from("hello"));  // String
         test(5);                      // i32
-        
+
         // Arbitrary struct containing String and Vec<f64>
         test(Foo {string: String::from("hi"), v: vec![1.2, 2.3]});
         thread::sleep(Duration::new(1, 0));
@@ -128,7 +127,7 @@ pub fn understand_local_thread(){
     使用 crossbeam::scope 共享数据
 
     ```rust
-    use crossbeam; 
+    use crossbeam;
     use std::{thread, time::Duration};
 
     fn main() {
@@ -170,7 +169,7 @@ pub fn understand_local_thread(){
     }
     ```
 */
-pub fn understand_shared_thread(){ 
+pub fn understand_shared_thread() {
     println!(" 线程间共享数据 ");
 }
 
@@ -193,10 +192,9 @@ pub fn understand_shared_thread(){
     }
     ```
 */
-pub fn understand_safed_shared_thread(){ 
+pub fn understand_safed_shared_thread() {
     println!(" 线程间安全共享数据 ");
 }
-
 
 /**
     ### 构建「无悔」并发系统
@@ -213,11 +211,11 @@ pub fn understand_safed_shared_thread(){
     > [Rust concurrency patterns: regret-less concurrency](https://medium.com/@polyglot_factotum/rust-regret-less-concurrency-2238b9e53333)
 
 
-    示例1: 用 channel 模拟 event 
+    示例1: 用 channel 模拟 event
 
     ```text
 
-                    
+
                                     +--------------+
                                     | main thread  |      send work msg
     +-----------------------------> |    主 组 件     |  +-------------+
@@ -605,23 +603,23 @@ pub fn understand_safed_shared_thread(){
         fn init() -> Self {
             WorkerState{ ongoing: 0, exiting: false }
         }
-        
+
         fn set_ongoing(&mut self, count: i16) {
             self.ongoing += count;
         }
-        
+
         fn set_exiting(&mut self, exit_state: bool) {
             self.exiting = exit_state;
         }
-        
+
         fn is_exiting(&self) -> bool {
             self.exiting == true
         }
-        
+
         fn is_nomore_work(&self)-> bool {
             self.ongoing == 0
         }
-        
+
     }
 
     fn main() {
@@ -630,7 +628,7 @@ pub fn understand_safed_shared_thread(){
         // 添加一个新的Channel，Worker使用它来通知“并行”组件已经完成了一个工作单元
         let (pool_result_sender, pool_result_receiver) = unbounded();
         let mut worker_state = WorkerState::init();
-        
+
         // 使用线程池
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(2)
@@ -788,19 +786,19 @@ pub fn understand_safed_shared_thread(){
         fn init() -> Self {
             WorkerState{ ongoing: 0, exiting: false }
         }
-        
+
         fn set_ongoing(&mut self, count: i16) {
             self.ongoing += count;
         }
-        
+
         fn set_exiting(&mut self, exit_state: bool) {
             self.exiting = exit_state;
         }
-        
+
         fn is_exiting(&self) -> bool {
             self.exiting == true
         }
-        
+
         fn is_nomore_work(&self)-> bool {
             self.ongoing == 0
         }
@@ -821,13 +819,13 @@ pub fn understand_safed_shared_thread(){
         // 添加一个新的Channel，Worker使用它来通知“并行”组件已经完成了一个工作单元
         let (pool_result_sender, pool_result_receiver) = unbounded();
         let mut worker_state = WorkerState::init();
-        
+
         // 使用线程池
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(2)
             .build()
             .unwrap();
-            
+
         // 缓存 work ，由 池 中的 worker 共享
         let cache: Arc<Mutex<HashMap<CacheKey, u8>>> = Arc::new(Mutex::new(HashMap::new()));
 
@@ -1012,19 +1010,19 @@ pub fn understand_safed_shared_thread(){
         fn init() -> Self {
             WorkerState{ ongoing: 0, exiting: false }
         }
-            
+
         fn set_ongoing(&mut self, count: i16) {
             self.ongoing += count;
         }
-            
+
         fn set_exiting(&mut self, exit_state: bool) {
             self.exiting = exit_state;
         }
-            
+
         fn is_exiting(&self) -> bool {
             self.exiting == true
         }
-            
+
         fn is_nomore_work(&self)-> bool {
             self.ongoing == 0
         }
@@ -1045,20 +1043,20 @@ pub fn understand_safed_shared_thread(){
         // 添加一个新的Channel，Worker使用它来通知“并行”组件已经完成了一个工作单元
         let (pool_result_sender, pool_result_receiver) = unbounded();
         let mut worker_state = WorkerState::init();
-            
+
         // 使用线程池
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(2)
             .build()
             .unwrap();
-                
+
         // 缓存 work ，由 池 中的 worker 共享
         let cache: Arc<Mutex<HashMap<CacheKey, u8>>> = Arc::new(Mutex::new(HashMap::new()));
 
         // 增加缓存状态，指示对于给定的key，缓存是否已经准备好被读取。
         let cache_state: Arc<Mutex<HashMap<CacheKey, Arc<(Mutex<CacheState>, Condvar)>>>> =
             Arc::new(Mutex::new(HashMap::new()));
-            
+
         let _ = thread::spawn(move || loop {
             // 使用 corssbeam 提供的 select! 宏 选择一个就绪工作
             select! {
@@ -1210,7 +1208,7 @@ pub fn understand_safed_shared_thread(){
         let _ = work_sender.send(WorkMsg::Exit);
 
         let mut counter = 0;
-        
+
         // 当work 是 1 的时候重新计数
         let mut work_one_counter = 0;
 
@@ -1238,8 +1236,6 @@ pub fn understand_safed_shared_thread(){
     }
     ```
 */
-pub fn understand_channel_and_condvar(){ 
+pub fn understand_channel_and_condvar() {
     println!(" 线程间安全共享数据 ");
 }
-
-

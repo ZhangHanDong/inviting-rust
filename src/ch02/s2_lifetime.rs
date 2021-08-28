@@ -1,6 +1,6 @@
 //! 第二章：Rust核心概念
 //! 2.2 生命周期与借用检查
-//! 
+//!
 //! 借用检查相关代码
 
 /**
@@ -19,10 +19,9 @@
     }
     ```
 */
-pub fn understand_scope(){ 
+pub fn understand_scope() {
     println!(" 理解词法作用域 ");
 }
-
 
 /**
     ### 理解借用检查 NLL
@@ -33,7 +32,7 @@ pub fn understand_scope(){
     fn main(){
         let s = "abc?d";
         let mut chars = s.chars().collect::<Vec<char>>();
-        
+
         // 处理字符串
         for (i, c) in chars.iter_mut().enumerate() {
             // 定义 a-z 字母集
@@ -49,16 +48,15 @@ pub fn understand_scope(){
                 chars[i] = words.find(|&w| Some(w) != left && Some(w) != right).unwrap();
             }
         }
-        
+
         let s = chars.into_iter().collect::<String>();
         println!("{:?}", s);
     }
     ```
 */
-pub fn understand_nll(){ 
+pub fn understand_nll() {
     println!(" 理解 非词法作用域借用检查： NLL ");
 }
-
 
 /**
 
@@ -66,7 +64,7 @@ pub fn understand_nll(){
 
     说明： 生命周期参数：late bound vs early bound
 
-    示例1: 
+    示例1:
 
     ```rust
     fn return_str<'a>() -> &'a str {
@@ -82,7 +80,7 @@ pub fn understand_nll(){
 
     ```
 
-    示例2: 
+    示例2:
 
     ```rust
     fn foo<'a>(x: &'a str, y: &'a str) -> &'a str {
@@ -98,7 +96,7 @@ pub fn understand_nll(){
     }
     ```
 
-    示例3: 
+    示例3:
 
     ```rust
     fn the_longest(s1: &str, s2: &str) -> &str {
@@ -112,10 +110,10 @@ pub fn understand_nll(){
             let res = the_longest(s1_r, &s2);
         println!("{} is the longest", res);
     }
-    
+
     ```
 
-    示例4: 
+    示例4:
 
     ```rust
     fn the_longest<'a>(s1: &'a str, s2: &'a str) -> &'a str {
@@ -132,15 +130,13 @@ pub fn understand_nll(){
 
     ```
 */
-pub fn understand_lifetime(){ 
+pub fn understand_lifetime() {
     println!(" 理解 生命周期参数 ");
 }
 
-
-
 /**
 
-说明： 生命周期参数：late bound vs early bound 
+说明： 生命周期参数：late bound vs early bound
 
 Quiz 11: [https://dtolnay.github.io/rust-quiz/11](https://dtolnay.github.io/rust-quiz/11)
 
@@ -230,11 +226,9 @@ impl<'b, 'a: 'b> Buffer<'a> {
 }
 ```
 */
-pub fn understand_lifetime_early_late_bound(){ 
+pub fn understand_lifetime_early_late_bound() {
     println!(" 理解生命周期参数：early bound vs late bound ");
 }
-
-
 
 /**
 
@@ -245,7 +239,7 @@ pub fn understand_lifetime_early_late_bound(){
     fn main() {
         let f = |x: &i32| x; // error
         // 假如支持下面的语法就方便多了，目前还未支持
-        // let f: for<'a> Fn(&'a i32) -> &'a i32 = |x| x; 
+        // let f: for<'a> Fn(&'a i32) -> &'a i32 = |x| x;
         let i = &3;
         let j = f(i);
     }
@@ -270,7 +264,7 @@ pub fn understand_lifetime_early_late_bound(){
 
     ```
 */
-pub fn understand_lifetime_for_closure(){
+pub fn understand_lifetime_for_closure() {
     println!(" 理解生命周期参数： 闭包相关")
 }
 
@@ -337,8 +331,8 @@ pub fn understand_lifetime_for_closure(){
     }
     ```
 
-    示例：来自于社区 Potato TooLarge 的案例 
-         
+    示例：来自于社区 Potato TooLarge 的案例
+
     [https://zhuanlan.zhihu.com/p/194156624](https://zhuanlan.zhihu.com/p/194156624)
 
     ```rust
@@ -348,24 +342,24 @@ pub fn understand_lifetime_for_closure(){
     use std::collections::HashSet;
 
     fn main() {
-        
+
         let hello = "hello".to_owned();
         let mut items = HashSet::new();
-        
+
         items.insert(hello.as_str());
-        
+
         let mut global_set = HashSet::new();
         global_set.insert(hello.as_str());
-        
+
         while !global_set.is_empty() {
             let mut temp_set = HashSet::new();
-            
+
             for &item in global_set.iter() {
                 let copy = item.to_owned();
                 let copy_str = copy.as_str();
-                
-                // copy_str <==> &copy  ===>  HashSet::get() 
-                // &copy_str <==> &'x &'a copy 
+
+                // copy_str <==> &copy  ===>  HashSet::get()
+                // &copy_str <==> &'x &'a copy
 
                 if let Some(inner) = items.get(copy_str).cloned() {
                     temp_set.insert(inner);
@@ -377,9 +371,9 @@ pub fn understand_lifetime_for_closure(){
     }
     ```
 
-    
+
 */
-pub fn understand_lifetime_in_generic_type(){ 
+pub fn understand_lifetime_in_generic_type() {
     println!(" 理解生命周期参数：T vs &T ");
 }
 
@@ -404,7 +398,7 @@ pub fn understand_lifetime_in_generic_type(){
 
     ###  理解 HRTB (higher ranked trait bounds)
 
-    示例一： 
+    示例一：
 
     ```rust
     use std::fmt::Debug;
@@ -529,9 +523,9 @@ pub fn understand_lifetime_in_generic_type(){
     }
     ```
 
-    
+
 
 */
-pub fn understand_lifetime_hrtb(){ 
+pub fn understand_lifetime_hrtb() {
     println!(" 理解生命周期参数：HRTB (higher ranked trait bounds) ");
 }

@@ -1,98 +1,95 @@
 //! 第三章：Rust 异步编程概念
 //!
 //! # 3.1 异步 I/O 模型
-//! 
+//!
 //! - 基本概念： 同步/异步、阻塞/非阻塞IO、多路复用、epoll/io_uring
 //! - Reactor/Preactor模型 与 事件抽象
 //! - minimio/mio
 
-
 /**
 
-    # 异步 I/O 模型
+   # 异步 I/O 模型
 
-    ## 基本概念
+   ## 基本概念
 
-    - 同步和异步，关注的是消息通信机制。（调用者视角）
-        - 同步，发出一个调用，在没有得到结果之前不返回。
-        - 异步，发出一个调用，在没有得到结果之前返回。
-    - 阻塞和非阻塞，关注的是程序等待调用结果的状态。（被调用者视角）
-        - 阻塞，在调用结果返回之前，线程被挂起。
-        - 非阻塞，在调用结果返回之前，线程不会被挂起。
-    
-    阻塞，与系统调用有关。
+   - 同步和异步，关注的是消息通信机制。（调用者视角）
+       - 同步，发出一个调用，在没有得到结果之前不返回。
+       - 异步，发出一个调用，在没有得到结果之前返回。
+   - 阻塞和非阻塞，关注的是程序等待调用结果的状态。（被调用者视角）
+       - 阻塞，在调用结果返回之前，线程被挂起。
+       - 非阻塞，在调用结果返回之前，线程不会被挂起。
 
-
-    ### I/O 模型
-
-    ```text
-                                     +-+ 阻 塞 I/O (BIO)
-                                     |
-                                     +-+ 非 阻 塞 I/O (NIO)
-                                     |
-                  +----+ 同 步 I/O +--+
-                  |                  |
-                  |                  +-+ I/O 多 路 复 用
-                  |                  |
-                  |                  +-+ 信 号 驱 动 I/O
-    I/O 模 型  +---+
-                  |
-                  |
-                  |                  +-+ Linux (AIO)
-                  |                  |         (io_uring)
-                  +----+ 异 步 I/O +--+
-                                     |
-                                     +-+ windows (IOCP)
-
-    ```
-
-    ### 同步阻塞I/O (blocking I/O)
-
-    ```text
-    Application               kernel
-    +---------+            +-----------+  +---+
-    |         |   syscall  | no        |      |
-    |   Read  | +--------> | datagram  |      |
-    | recvfrom|            | ready     |      |
-    |         |            |    +      |      +-+ wait for
-    |         |            |    |      |      +-+ data
-    |         |            |    v      |      |
-    |         |            | datagram  |      |
-    |         |            | ready     |  +---+
-    |         |            |           |
-    |         |            | copy      |  +---+
-    |         |            | datagram  |      |
-    |process  |            |    +      |      +-+ copy data
-    |datagram |   return   |    |      |      +-+ from kernel to user
-    |         | <--------+ |    v      |      |
-    |         |            |  copy     |  +---+
-    |         |            |  complete |
-    +---------+            +-----------+
-    ```
-
-    输入操作两个阶段：
-
-    1. 进程等待内核把数据准备好；这个阶段可以阻塞也可非阻塞，设置socket属性。
-        - 阻塞： recvfrom 阻塞线程直到返回数据就绪的结果。
-        - 非阻塞：立即返回一个错误，轮询直到数据就绪。
-    2. 从内核缓冲区向进程缓冲区复制数据。（一直阻塞）
-
-    异步I/O，recvfrom总是立即返回，两个阶段都由内核完成。
-
-    ### I/O 多路复用（I/O Multiplexing )
-
-    IO多路复用是一种同步IO模型，实现一个线程可以监视多个文件句柄。
-
-    支持I/O多路复用的系统调用有 select/pselect/poll/epoll，本质都是 同步 I/O，因为数据拷贝都是阻塞的。
-    通过 select/epoll 来判断数据报是否准备好，即判断可读可写状态。
+   阻塞，与系统调用有关。
 
 
-    
+   ### I/O 模型
 
- */
-pub fn basic_concept(){}
+   ```text
+                                    +-+ 阻 塞 I/O (BIO)
+                                    |
+                                    +-+ 非 阻 塞 I/O (NIO)
+                                    |
+                 +----+ 同 步 I/O +--+
+                 |                  |
+                 |                  +-+ I/O 多 路 复 用
+                 |                  |
+                 |                  +-+ 信 号 驱 动 I/O
+   I/O 模 型  +---+
+                 |
+                 |
+                 |                  +-+ Linux (AIO)
+                 |                  |         (io_uring)
+                 +----+ 异 步 I/O +--+
+                                    |
+                                    +-+ windows (IOCP)
+
+   ```
+
+   ### 同步阻塞I/O (blocking I/O)
+
+   ```text
+   Application               kernel
+   +---------+            +-----------+  +---+
+   |         |   syscall  | no        |      |
+   |   Read  | +--------> | datagram  |      |
+   | recvfrom|            | ready     |      |
+   |         |            |    +      |      +-+ wait for
+   |         |            |    |      |      +-+ data
+   |         |            |    v      |      |
+   |         |            | datagram  |      |
+   |         |            | ready     |  +---+
+   |         |            |           |
+   |         |            | copy      |  +---+
+   |         |            | datagram  |      |
+   |process  |            |    +      |      +-+ copy data
+   |datagram |   return   |    |      |      +-+ from kernel to user
+   |         | <--------+ |    v      |      |
+   |         |            |  copy     |  +---+
+   |         |            |  complete |
+   +---------+            +-----------+
+   ```
+
+   输入操作两个阶段：
+
+   1. 进程等待内核把数据准备好；这个阶段可以阻塞也可非阻塞，设置socket属性。
+       - 阻塞： recvfrom 阻塞线程直到返回数据就绪的结果。
+       - 非阻塞：立即返回一个错误，轮询直到数据就绪。
+   2. 从内核缓冲区向进程缓冲区复制数据。（一直阻塞）
+
+   异步I/O，recvfrom总是立即返回，两个阶段都由内核完成。
+
+   ### I/O 多路复用（I/O Multiplexing )
+
+   IO多路复用是一种同步IO模型，实现一个线程可以监视多个文件句柄。
+
+   支持I/O多路复用的系统调用有 select/pselect/poll/epoll，本质都是 同步 I/O，因为数据拷贝都是阻塞的。
+   通过 select/epoll 来判断数据报是否准备好，即判断可读可写状态。
 
 
+
+
+*/
+pub fn basic_concept() {}
 
 /**
 
@@ -139,8 +136,7 @@ pub fn basic_concept(){}
     当多个进程/线程调用epoll_wait时会阻塞等待，当内核触发可读写事件，所有进程/线程都会进行响应，但是实际上只有一个进程/线程真实处理这些事件。
     Liux 4.5 通过引入 EPOLLEXCLUSIVE 标识来保证一个事件发生时候只有一个线程会被唤醒，以避免多侦听下的惊群问题。
 */
-pub fn epoll(){}
-
+pub fn epoll() {}
 
 /**
     ## io_uring 异步 I/O 模型
@@ -174,22 +170,20 @@ pub fn epoll(){}
     ```
 
     io_uring接口通过两个主要数据结构工作：
-    
+
     - 提交队列条目（sqe）
     - 完成队列条目（cqe）
-    
+
     这些结构的实例位于内核和应用程序之间的**共享内存**单生产者单消费者环形缓冲区中。
 
     参考：
-    
+
     [https://thenewstack.io/how-io_uring-and-ebpf-will-revolutionize-programming-in-linux/](https://thenewstack.io/how-io_uring-and-ebpf-will-revolutionize-programming-in-linux/)
 
     [https://cor3ntin.github.io/posts/iouring/#io_uring](https://cor3ntin.github.io/posts/iouring/#io_uring)
 
 */
-pub fn io_uring(){}
-
-
+pub fn io_uring() {}
 
 /**
 
@@ -200,7 +194,7 @@ pub fn io_uring(){}
     - Reactor（反应器） 模式，对应同步I/O，被动的事件分离和分发模型。服务等待请求事件的到来，再通过不受间断的同步处理事件，从而做出反应。
     - Preactor（主动器） 模式，对应异步I/O，主动的事件分离和分发模型。这种设计允许多个任务并发的执行，从而提高吞吐量；并可执行耗时长的任务（各个任务间互不影响）。
 
-    Reactor Model: 
+    Reactor Model:
 
     ```text
                                                          +----------------+
@@ -244,8 +238,7 @@ pub fn io_uring(){}
     5. Reactor 管理器。事件处理器的调度核心。分离每个事件，调度事件管理器，调用具体的函数处理某个事件。
 
 */
-pub fn event_driven(){}
-
+pub fn event_driven() {}
 
 /**
 
@@ -254,10 +247,10 @@ pub fn event_driven(){}
     1. [https://github.com/zupzup/rust-epoll-example/blob/main/src/main.rs](https://github.com/zupzup/rust-epoll-example/blob/main/src/main.rs)
     2. [Reactor executor Example](https://github.com/zupzup/rust-reactor-executor-example)
 
-    ## 实现跨平台 
+    ## 实现跨平台
 
     1. [minimio](https://github.com/cfsamson/examples-minimio)
     2. [mio](https://github.com/tokio-rs/mio) and mio-examples
 
 */
-pub fn epoll_server(){}
+pub fn epoll_server() {}

@@ -1,20 +1,18 @@
 //! 第二章：Rust核心概念
 //! 2.8 Unsafe Rust
-//! 
+//!
 //! 内容包括：
-//! 
+//!
 //! - 什么是 Unsafe Rust ？
 //!     
 //! - Unsafe Rust 安全抽象
 //!     - drop 检查
 //!     - Unbound Lifetime
 //!     - 型变
-//! 
+//!
 //! - 标准库 [LinkedList 源码](https://doc.rust-lang.org/stable/src/alloc/collections/linked_list.rs.html#38-43)导读
 //!
 //!  - Unsafe 工具集介绍
-
-
 
 /**
 
@@ -43,7 +41,7 @@
     解引用裸指针
 
     - Rust提供了*const T（不变）和*mut T（可变）两种指针类型。因为这两种指针和C语言中的指针十分相近，所以叫其原生指针（Raw Pointer）。
-    
+
     原生指针具有以下特点：
     - 并不保证指向合法的内存。比如很可能是一个空指针。
     - 不能像智能指针那样自动清理内存。需要像C语言那样手动管理内存。
@@ -53,7 +51,7 @@
      可见，原生指针并不受Safe Rust提供的那一层“安全外衣”保护，所以也被称为“裸指针”。所以，在对裸指针进行解引用操作的时候，属于不安全行为。
 
 
-    Unsafe语法  
+    Unsafe语法
 
     通过unsafe关键字和unsafe块就可以使用Unsafe Rust，它们的作用如下：
 
@@ -65,7 +63,7 @@
     这里最大的风险在于，如果一个函数存在违反“契约”的风险，而开发者并没有使用unsafe关键字将其标记，那该函数就很可能会成为Bug的温床。
     被unsafe关键字标记的不安全函数或方法，只能在unsafe块中被调用。
 
-    
+
 
     示例2:
 
@@ -83,7 +81,7 @@
     Safe Rust 是基于很多 Unsafe Rust 实现的，那么 Safe Rust 凭什么 Safe ？
 
 */
-pub fn unsafe_intro(){}
+pub fn unsafe_intro() {}
 
 /**
 
@@ -100,7 +98,7 @@ pub fn unsafe_intro(){}
 
     fn normal_foo<'a>(input: &'a u32) -> &'a u32 {
         &input
-        
+
     }
 
     fn main() {
@@ -109,7 +107,7 @@ pub fn unsafe_intro(){}
             // unbound lifetime broken lifetime
             let y = 7;
             x = unbound_lifetime_foo(&y);
-            
+
             // normal lifetime will error: error[E0597]: `y` does not live long enough
             // let y = 8;
             // x = normal_foo(&y);
@@ -141,8 +139,8 @@ pub fn unsafe_intro(){}
     ```
 
 
-    ### Drop check 
-    
+    ### Drop check
+
     示例1：正常的drop check
 
     ```rust
@@ -201,7 +199,7 @@ pub fn unsafe_intro(){}
                 let p = p as *mut T;
                 ptr::write(p, t);
                 MyBox {
-                    v: p, 
+                    v: p,
                 }
             }
         }
@@ -296,7 +294,7 @@ pub fn unsafe_intro(){}
                 let p = p as *mut T;
                 ptr::write(p, t);
                 MyBox {
-                    v: p, 
+                    v: p,
                 }
             }
         }
@@ -391,7 +389,7 @@ pub fn unsafe_intro(){}
                 let p = p as *mut T;
                 ptr::write(p, t);
                 MyBox {
-                    v: p, 
+                    v: p,
                     // _pd: Default::default()
                 }
             }
@@ -450,14 +448,14 @@ pub fn unsafe_intro(){}
 
     PhantomData规则：
 
-    - PhantomData，在T上是协变。 
-    - PhantomData<&'a T>，在'a 和T上是协变。 
-    - PhantomData<&'a mut T>，在'a上是协变，在T上是不变。 
-    - PhantomData<*const T>，在T上是协变。 
-    - PhantomData<*mut T>，在T上不变。 
-    - PhantomData<fn(T)>，在T上是逆变，如果以后语法修改的话，会成为不变。 
-    - PhantomData<fn() -> T>，在T上是协变。 
-    - PhantomData<fn(T) -> T>，在T上是不变。 
+    - PhantomData，在T上是协变。
+    - PhantomData<&'a T>，在'a 和T上是协变。
+    - PhantomData<&'a mut T>，在'a上是协变，在T上是不变。
+    - PhantomData<*const T>，在T上是协变。
+    - PhantomData<*mut T>，在T上不变。
+    - PhantomData<fn(T)>，在T上是逆变，如果以后语法修改的话，会成为不变。
+    - PhantomData<fn() -> T>，在T上是协变。
+    - PhantomData<fn(T) -> T>，在T上是不变。
     - PhantomData<Cell<&'a ()>>，在'a上是不变。
 
     ```rust
@@ -538,7 +536,7 @@ pub fn unsafe_intro(){}
         println!("  end value: {}", cell.value);
     }
     ```
-    
+
     示例：逆变
 
     ```rust
@@ -569,7 +567,7 @@ pub fn unsafe_intro(){}
 
     ```rust
     fn foo(input: &str)  {
-        println!("{:?}", input);               
+        println!("{:?}", input);
     }
     fn bar(f: fn(&'static str), v: &'static str) {
         (f)(v);
@@ -581,8 +579,7 @@ pub fn unsafe_intro(){}
     ```
 
 */
-pub fn security_abstract(){}
-
+pub fn security_abstract() {}
 
 /**
 
@@ -595,4 +592,4 @@ pub fn security_abstract(){}
     - 推荐阅读：[Unsafe Rust: How and when (not) to use it](https://blog.logrocket.com/unsafe-rust-how-and-when-not-to-use-it/)
     - [rustsec advisories](https://rustsec.org/advisories/)
 */
-pub fn nonnull(){}
+pub fn nonnull() {}
