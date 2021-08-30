@@ -10,10 +10,14 @@ use crate::{
     body::{box_body, BoxBody}, 
     router::empty_router::EmptyRouter,
     util::Either,
+    extract::FromRequest,
+    service::HandleError,
 };
 
 use crate::response::IntoResponse;
 use tower_service::Service;
+use crate::BoxError;
+use bytes::Bytes;
 
 use http::{Request, Response, StatusCode, Uri};
 
@@ -78,34 +82,36 @@ pub trait Handler<B, T>: Clone + Send + Sized + 'static {
 
     
 
-    // /// Convert the handler into a [`Service`].
-    // ///
-    // /// This allows you to serve a single handler if you don't need any routing:
-    // ///
-    // /// ```rust
-    // /// use axum::{
-    // ///     Server, handler::Handler, http::{Uri, Method}, response::IntoResponse,
-    // /// };
-    // /// use tower::make::Shared;
-    // /// use std::net::SocketAddr;
-    // ///
-    // /// async fn handler(method: Method, uri: Uri, body: String) -> impl IntoResponse {
-    // ///     format!("received `{} {}` with body `{:?}`", method, uri, body)
-    // /// }
-    // ///
-    // /// let service = handler.into_service();
-    // ///
-    // /// # async {
-    // /// Server::bind(&SocketAddr::from(([127, 0, 0, 1], 3000)))
-    // ///     .serve(Shared::new(service))
-    // ///     .await?;
-    // /// # Ok::<_, hyper::Error>(())
-    // /// # };
-    // /// ```
-    // fn into_service(self) -> IntoService<Self, B, T> {
-    //     IntoService::new(self)
-    // }
+    /// Convert the handler into a [`Service`].
+    ///
+    /// This allows you to serve a single handler if you don't need any routing:
+    ///
+    /// ```rust
+    /// use axum::{
+    ///     Server, handler::Handler, http::{Uri, Method}, response::IntoResponse,
+    /// };
+    /// use tower::make::Shared;
+    /// use std::net::SocketAddr;
+    ///
+    /// async fn handler(method: Method, uri: Uri, body: String) -> impl IntoResponse {
+    ///     format!("received `{} {}` with body `{:?}`", method, uri, body)
+    /// }
+    ///
+    /// let service = handler.into_service();
+    ///
+    /// # async {
+    /// Server::bind(&SocketAddr::from(([127, 0, 0, 1], 3000)))
+    ///     .serve(Shared::new(service))
+    ///     .await?;
+    /// # Ok::<_, hyper::Error>(())
+    /// # };
+    /// ```
+    fn into_service(self) -> IntoService<Self, B, T> {
+        IntoService::new(self)
+    }
 }
+
+
 
 #[async_trait]
 impl<F, Fut, Res, B> Handler<B, ()> for F
@@ -346,5 +352,135 @@ where
             .field("handler", &format_args!("{}", std::any::type_name::<H>()))
             .field("fallback", &self.fallback)
             .finish()
+    }
+}
+
+// extract 支持
+macro_rules! impl_handler {
+    () => {
+    };
+
+    ( $head:ident, $($tail:ident),* $(,)? ) => {
+        #[async_trait]
+        #[allow(non_snake_case)]
+        impl<F, Fut, B, Res, $head, $($tail,)*> Handler<B, ($head, $($tail,)*)> for F
+        where
+            F: FnOnce($head, $($tail,)*) -> Fut + Clone + Send + Sync + 'static,
+            Fut: Future<Output = Res> + Send,
+            B: Send + 'static,
+            Res: IntoResponse,
+            B: Send + 'static,
+            $head: FromRequest<B> + Send,
+            $( $tail: FromRequest<B> + Send,)*
+        {
+            type Sealed = sealed::Hidden;
+
+            async fn call(self, req: Request<B>) -> Response<BoxBody> {
+                let mut req = crate::extract::RequestParts::new(req);
+
+                let $head = match $head::from_request(&mut req).await {
+                    Ok(value) => value,
+                    Err(rejection) => return rejection.into_response().map(box_body),
+                };
+
+                $(
+                    let $tail = match $tail::from_request(&mut req).await {
+                        Ok(value) => value,
+                        Err(rejection) => return rejection.into_response().map(box_body),
+                    };
+                )*
+
+                let res = self($head, $($tail,)*).await;
+
+                res.into_response().map(crate::body::box_body)
+            }
+        }
+
+        impl_handler!($($tail,)*);
+    };
+}
+
+impl_handler!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16);
+
+/// A [`Service`] created from a [`Handler`] by applying a Tower middleware.
+///
+/// Created with [`Handler::layer`]. See that method for more details.
+pub struct Layered<S, T> {
+    svc: S,
+    _input: PhantomData<fn() -> T>,
+}
+
+impl<S, T> fmt::Debug for Layered<S, T>
+where
+    S: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Layered").field("svc", &self.svc).finish()
+    }
+}
+
+impl<S, T> Clone for Layered<S, T>
+where
+    S: Clone,
+{
+    fn clone(&self) -> Self {
+        Self::new(self.svc.clone())
+    }
+}
+
+#[async_trait]
+impl<S, T, ReqBody, ResBody> Handler<ReqBody, T> for Layered<S, T>
+where
+    S: Service<Request<ReqBody>, Response = Response<ResBody>> + Clone + Send + 'static,
+    S::Error: IntoResponse,
+    S::Future: Send,
+    T: 'static,
+    ReqBody: Send + 'static,
+    ResBody: http_body::Body<Data = Bytes> + Send + Sync + 'static,
+    ResBody::Error: Into<BoxError> + Send + Sync + 'static,
+{
+    type Sealed = sealed::Hidden;
+
+    async fn call(self, req: Request<ReqBody>) -> Response<BoxBody> {
+        match self
+            .svc
+            .oneshot(req)
+            .await
+            .map_err(IntoResponse::into_response)
+        {
+            Ok(res) => res.map(box_body),
+            Err(res) => res.map(box_body),
+        }
+    }
+}
+
+impl<S, T> Layered<S, T> {
+    pub(crate) fn new(svc: S) -> Self {
+        Self {
+            svc,
+            _input: PhantomData,
+        }
+    }
+
+    /// Create a new [`Layered`] handler where errors will be handled using the
+    /// given closure.
+    ///
+    /// This is used to convert errors to responses rather than simply
+    /// terminating the connection.
+    ///
+    /// It works similarly to [`routing::Router::handle_error`]. See that for more details.
+    ///
+    /// [`routing::Router::handle_error`]: crate::routing::Router::handle_error
+    pub fn handle_error<F, ReqBody, ResBody, Res, E>(
+        self,
+        f: F,
+    ) -> Layered<HandleError<S, F, ReqBody>, T>
+    where
+        S: Service<Request<ReqBody>, Response = Response<ResBody>>,
+        F: FnOnce(S::Error) -> Result<Res, E>,
+        Res: IntoResponse,
+    {
+        let svc = HandleError::new(self.svc, f);
+        Layered::new(svc)
     }
 }
