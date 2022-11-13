@@ -1,12 +1,13 @@
 use super::*;
+use toml::value::{Map, Value};
 
 #[derive(Debug)]
 pub struct BasicConfig {
     pub environment: super::Environment,
     pub address: String,
-    pub port: u16,
+    pub port:  String,
     pub database: Option<Database>,
-    pub workers: Option<u16>,
+    pub workers: Option<usize>,
     pub(crate) config_file_path: Option<PathBuf>,
     pub(crate) root_path: Option<PathBuf>,
 }
@@ -17,11 +18,11 @@ impl BasicConfig {
     }
 
     pub(crate) fn default(env: super::Environment) -> Self {
-        let default_workers = (num_cpus::get() * 2) as u16;
+        let default_workers = (num_cpus::get() * 2) ;
         let default_config = BasicConfig {
             environment: Development,
             address: "localhost".to_string(),
-            port: 8000,
+            port: "8000".to_string(),
             database: None,
             workers: Some(default_workers),
             config_file_path: None,
@@ -43,6 +44,89 @@ impl BasicConfig {
             }
             Production => {
                 BasicConfig {
+                    environment: Production,
+                    ..default_config
+                }
+            }
+        }
+    }
+
+    // Parse Demo： 
+    // 
+    // {"development": 
+    //     Table(
+    //         {"address": String("localhost"), 
+    //         "database": 
+    //             Table({
+    //                 "adapter": String("postgresql"), 
+    //                 "db_name": String("blog_development"), 
+    //                 "pool": Integer(5)
+    //             }), 
+    //             "port": String("8100"), 
+    //             "workers": Integer(4)
+    //         }), 
+    // "production": 
+    //     Table({
+    //         "address": String("0.0.0.0"), 
+    //         "database": 
+    //             Table({"adapter": String("postgresql"), 
+    //                     "db_name": String("blog_development"), 
+    //                     "pool": Integer(5)
+    //             }), 
+    //             "port": String("9000")
+    //     }), 
+    // "staging": 
+    //     Table({
+    //         "address": String("0.0.0.0"), 
+    //         "database": 
+    //             Table({
+    //                 "adapter": String("postgresql"), 
+    //                 "db_name": String("blog_development"), 
+    //                 "pool": Integer(5)
+    //             }), 
+    //             "port": String("9000")
+    //     })
+    // }
+    pub(crate) fn set_config(env: super::Environment, table: &Map<String, Value>) -> Self{
+        let default_workers = (num_cpus::get() * 2);
+        let default_config = BasicConfig {
+            environment: Development,
+            address: "localhost".to_string(),
+            port: "8000".to_string(),
+            database: None,
+            workers: Some(default_workers),
+            config_file_path: None,
+            root_path: None,
+        };
+        
+        match env {
+            Development => {
+                let value = table.get("development");
+                match value {
+                    Some(table) => {
+                        return BasicConfig {
+                            environment: Development,
+                            address: table.get("address").and_then(|v|v.as_str()).unwrap().to_string(),
+                            port: table.get("port").and_then(|v|v.as_str()).unwrap().to_string(),
+                            database: Some(Database::new(table.get("database").unwrap())),
+                            workers: table.get("workers").and_then(|v|v.as_integer()).map(|v| v as usize),
+                            ..default_config
+                        };
+                    },
+                    None => {panic!("Parse Error")}
+                }
+                
+            }
+            Staging => {
+                BasicConfig {
+                    environment: Staging,
+                    // TODO: 留作练习
+                    ..default_config
+                }
+            }
+            Production => {
+                BasicConfig {
+                    // TODO: 留作练习
                     environment: Production,
                     ..default_config
                 }
@@ -84,5 +168,21 @@ impl PartialEq for BasicConfig {
 pub struct Database {
     pub(crate) adapter: String,
     pub(crate) db_name: String,
-    pub(crate) pool: u32,
+    pub(crate) pool: usize,
+}
+
+    // database": 
+    //             Table({
+    //                 "adapter": String("postgresql"), 
+    //                 "db_name": String("blog_development"), 
+    //                 "pool": Integer(5)
+    //             }), 
+impl Database {
+    fn new(table: &Value) -> Self{
+        Database {
+            adapter: table.get("adapter").and_then(|v|v.as_str()).unwrap().to_string(),
+            db_name: table.get("db_name").and_then(|v|v.as_str()).unwrap().to_string(),
+            pool: table.get("pool").and_then(|v|v.as_integer()).unwrap() as usize,
+        }
+    }
 }

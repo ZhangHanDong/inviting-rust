@@ -1,12 +1,12 @@
 [development]
-address = "localhost"
-port = "8000"
-workers = 4
+address = "127.0.0.1"
+port = "8100"
+workers = 5
 
 [development.database]
-adapter = "postgresql"
+adapter = "mysql"
 db_name = "blog_development"
-pool = 5
+pool = 10
 
 [staging]
 address = "0.0.0.0"

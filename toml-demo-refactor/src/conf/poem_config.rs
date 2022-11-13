@@ -48,6 +48,7 @@ impl PoemConfig {
         }
     }
 
+    
     pub fn active_default_from(filename: Option<&Path>) -> super::Result<PoemConfig> {
         let mut defaults = HashMap::new();
         if let Some(path) = filename {
@@ -73,6 +74,7 @@ impl PoemConfig {
     }
 
     fn parse<P: AsRef<Path>>(src: String, filename: P) -> super::Result<PoemConfig> {
+        let mut configs = HashMap::new();
         let path = filename.as_ref().to_path_buf();
         let table = match src.parse::<toml::Value>() {
             Ok(toml::Value::Table(table)) => table,
@@ -82,24 +84,20 @@ impl PoemConfig {
             }
             Err(e) => return Err(ConfigError::ParseError(src, path, e.to_string(), e.line_col()))
         };
-
-        // Create a config with the defaults; set the env to the active one.
-        let mut config = PoemConfig::active_default_from(Some(filename.as_ref()))?;
+        println!("{table:?}");
 
 
-        // Parse the values from the TOML file.
-        for (entry, value) in table {
-            // Each environment must be a table.
-            let kv_pairs = match value.as_table() {
-                Some(table) => table,
-                None => return Err(ConfigError::BadType(
-                    entry, "a table", value.type_str(), Some(path.clone())
-                ))
-            };
+        configs.insert(Development,BasicConfig::set_config(Development, 
+            &table));
+        configs.insert(Staging,BasicConfig::set_config(Staging, &table));
+        configs.insert(Production,BasicConfig::set_config(Production, &table));
 
-        }
+        let mut poem_config = PoemConfig {
+            active_env: Environment::active()?,
+            config: configs,
+        };
 
-        Ok(config)
+        Ok(poem_config)
     }
 
 }
