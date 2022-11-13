@@ -7,11 +7,13 @@ use std::process;
 type ParseResult<i32> = Result<i32, Box<dyn Error>>;
 
 fn run(filename: &str) -> ParseResult<i32> {
-    File::open(filename).map_err(|e| e.into())
+    File::open(filename)
+    .map_err(|e| e.into())
     .and_then(|mut f|{
         let mut contents = String::new();
         f.read_to_string(&mut contents)
-        .map_err(|e| e.into()).map(|_|contents)
+        .map_err(|e| e.into())
+        .map(|_|contents)
     })
     .and_then(|contents|{
         let mut sum = 0;

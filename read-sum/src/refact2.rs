@@ -6,6 +6,7 @@ use std::process;
 use std::io;
 use std::num;
 use std::fmt;
+
 #[derive(Debug)]
 enum CliError {
     Io(io::Error),
@@ -55,7 +56,7 @@ fn run(filename: Option<String>) -> ParseResult<i32> {
 
 type ParseResult<i32> = Result<i32, CliError>;
 
-fn main() {
+fn main() -> () {
     let filename = env::args().nth(1);
     match run(filename) {
         Ok(n) => {
